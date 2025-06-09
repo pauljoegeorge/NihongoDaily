@@ -1,15 +1,21 @@
 
 "use client";
 
-// import type { VocabularyWord } from '@/types'; // Not directly used here, types come via useVocabulary
+import type { VocabularyWord } from '@/types';
 import VocabularyCard from './VocabularyCard';
-import { useVocabulary } from '@/hooks/useVocabulary';
-import { FileText } from 'lucide-react'; // Removed Info
+// import { useVocabulary } from '@/hooks/useVocabulary'; // Removed hook call from here
+import { FileText } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
+interface VocabularyListProps {
+  words: VocabularyWord[];
+  loading: boolean;
+  toggleLearnedStatus: (id: string) => void;
+  deleteWord: (id: string) => void;
+}
 
-export default function VocabularyList() {
-  const { words, loading, toggleLearnedStatus, deleteWord } = useVocabulary(); // Removed regenerateSentences
+export default function VocabularyList({ words, loading, toggleLearnedStatus, deleteWord }: VocabularyListProps) {
+  // const { words, loading, toggleLearnedStatus, deleteWord } = useVocabulary(); // Instance of hook removed
 
   if (loading) {
     return (
@@ -50,10 +56,10 @@ export default function VocabularyList() {
             word={word} 
             onToggleLearned={toggleLearnedStatus}
             onDelete={deleteWord}
-            // onRegenerateSentences prop removed
           />
         ))}
       </div>
     </div>
   );
 }
+
