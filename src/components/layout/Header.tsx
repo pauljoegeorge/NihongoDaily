@@ -1,8 +1,8 @@
 
-import { Cherry } from 'lucide-react';
+import { Cherry, BookMarked } from 'lucide-react'; // Added BookMarked icon
 import Link from 'next/link';
 import SignInButton from '@/components/auth/SignInButton';
-import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher'; // Import ThemeSwitcher
+import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
 
 export default function Header() {
   return (
@@ -14,8 +14,12 @@ export default function Header() {
             Nihongo Daily
           </h1>
         </Link>
-        <div className="flex items-center gap-2">
-          <ThemeSwitcher /> {/* Add ThemeSwitcher component */}
+        <div className="flex items-center gap-3"> {/* Increased gap slightly */}
+          <Link href="/quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary-foreground hover:text-primary hover:bg-primary/10 px-3 py-2 rounded-md transition-colors">
+            <BookMarked className="h-5 w-5" />
+            Quiz
+          </Link>
+          <ThemeSwitcher />
           <SignInButton />
         </div>
       </div>
