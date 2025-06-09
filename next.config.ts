@@ -25,6 +25,18 @@ const nextConfig: NextConfig = {
       }
     ],
   },
+  // Add allowedDevOrigins for development environment
+  ...(process.env.NODE_ENV === 'development' && {
+    experimental: {
+      allowedDevOrigins: [
+        // This is the origin from the warning log
+        '6000-firebase-studio-1749453651055.cluster-fkltigo73ncaixtmokrzxhwsfc.cloudworkstations.dev',
+        // It's good practice to also include the standard http localhost if you ever run it locally
+        // without the cloud workstation proxy.
+        'http://localhost:9002', 
+      ],
+    },
+  }),
 };
 
 export default nextConfig;
