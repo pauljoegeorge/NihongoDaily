@@ -1,5 +1,5 @@
 
-import { Cherry, BookMarked } from 'lucide-react'; // Added BookMarked icon
+import { Cherry, BookMarked, LayoutDashboard } from 'lucide-react'; // Added LayoutDashboard icon
 import Link from 'next/link';
 import SignInButton from '@/components/auth/SignInButton';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
@@ -14,7 +14,11 @@ export default function Header() {
             Nihongo Daily
           </h1>
         </Link>
-        <div className="flex items-center gap-3"> {/* Increased gap slightly */}
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard" className="flex items-center gap-1.5 text-sm font-medium text-primary-foreground hover:text-primary hover:bg-primary/10 px-3 py-2 rounded-md transition-colors">
+            <LayoutDashboard className="h-5 w-5" />
+            Dashboard
+          </Link>
           <Link href="/quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary-foreground hover:text-primary hover:bg-primary/10 px-3 py-2 rounded-md transition-colors">
             <BookMarked className="h-5 w-5" />
             Quiz
@@ -26,3 +30,4 @@ export default function Header() {
     </header>
   );
 }
+
