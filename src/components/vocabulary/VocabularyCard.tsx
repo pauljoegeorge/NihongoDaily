@@ -6,7 +6,7 @@ import type { VocabularyWord } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, XCircle, BarChart3, ChevronDown, Edit3 } from 'lucide-react'; // Added XCircle
+import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, XCircle, BarChart3, ChevronDown, Edit3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '../ui/separator';
 import {
@@ -15,14 +15,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import EditVocabularyDialog, { type EditFormData } from './EditVocabularyDialog'; // Import Edit Dialog and its form data type
+import EditVocabularyDialog, { type EditFormData } from './EditVocabularyDialog';
 
 interface VocabularyCardProps {
   word: VocabularyWord;
   onToggleLearned: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdateDifficulty: (id: string, difficulty: 'easy' | 'medium' | 'hard') => void;
-  onUpdateWord: (id: string, data: EditFormData) => Promise<void>; // Add prop for updating word
+  onUpdateWord: (id: string, data: EditFormData) => Promise<void>;
 }
 
 export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpdateDifficulty, onUpdateWord }: VocabularyCardProps) {
@@ -77,25 +77,25 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
               {!word.learned && (
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon" 
                   onClick={() => onToggleLearned(word.id)}
-                  className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                  className="text-green-500 hover:text-green-600 hover:bg-green-500/10"
                   aria-label="Mark as Learned"
                   title="Mark as Learned"
                 >
-                  <CheckCircle2 className="h-5 w-5" />
+                  <CheckCircle2 className="h-6 w-6" />
                 </Button>
               )}
               {word.learned && (
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon" 
                   onClick={() => onToggleLearned(word.id)}
-                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
                   aria-label="Mark as Unlearned"
                   title="Mark as Unlearned"
                 >
-                  <XCircle className="h-5 w-5" />
+                  <XCircle className="h-6 w-6" />
                 </Button>
               )}
             </div>
@@ -159,7 +159,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
           </Button>
         </CardFooter>
       </Card>
-      {word && ( // Conditionally render the dialog
+      {word && ( 
         <EditVocabularyDialog
           isOpen={isEditDialogOpen}
           setIsOpen={setIsEditDialogOpen}
