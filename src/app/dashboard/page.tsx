@@ -8,7 +8,18 @@ import type { VocabularyWord } from '@/types';
 import { format, parseISO, startOfDay, compareAsc } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { BarChart as ChartIcon, Loader2, LogIn, Info, Target } from 'lucide-react';
+import { 
+  BarChart as ChartIcon, 
+  Loader2, 
+  LogIn, 
+  Info, 
+  Target, 
+  Sigma, 
+  BookCheck, 
+  Smile, 
+  Meh, 
+  Frown
+} from 'lucide-react';
 import Link from 'next/link';
 import {
   BarChart,
@@ -49,31 +60,63 @@ export default function DashboardPage() {
 
   const processedData = useMemo(() => {
     if (!allWords || allWords.length === 0) {
-      return { dailyWordCounts: [], goalMetDays: [], chartData: [] };
+      return { 
+        dailyWordCounts: [], 
+        goalMetDays: [], 
+        chartData: [],
+        totalWords: 0,
+        totalStudied: 0,
+        easyWords: 0,
+        mediumWords: 0,
+        hardWords: 0,
+      };
     }
 
     const countsByDate: Record<string, number> = {};
+    let totalStudied = 0;
+    let easyWords = 0;
+    let mediumWords = 0;
+    let hardWords = 0;
+
     allWords.forEach(word => {
       const dateStr = format(startOfDay(new Date(word.createdAt)), 'yyyy-MM-dd');
       countsByDate[dateStr] = (countsByDate[dateStr] || 0) + 1;
+      if (word.learned) totalStudied++;
+      if (word.difficulty === 'easy') easyWords++;
+      else if (word.difficulty === 'medium') mediumWords++;
+      else if (word.difficulty === 'hard') hardWords++;
     });
 
     const dailyWordCountsArray: DailyWordCount[] = Object.entries(countsByDate)
       .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => compareAsc(parseISO(a.date), parseISO(b.date))); // Sort chronologically for chart
+      .sort((a, b) => compareAsc(parseISO(a.date), parseISO(b.date))); 
 
     const goalMetDaysArray = dailyWordCountsArray
       .filter(item => item.count >= DAILY_GOAL)
-      .sort((a,b) => compareAsc(parseISO(b.date), parseISO(a.date))); // Sort recent first for list
+      .sort((a,b) => compareAsc(parseISO(b.date), parseISO(a.date))); 
 
     return {
-      dailyWordCounts: dailyWordCountsArray, // For chart
-      goalMetDays: goalMetDaysArray, // For list and total count
-      chartData: dailyWordCountsArray.map(item => ({...item, dateForChart: format(parseISO(item.date), 'MMM d') })) // Prepare for chart XAxis
+      dailyWordCounts: dailyWordCountsArray,
+      goalMetDays: goalMetDaysArray,
+      chartData: dailyWordCountsArray.map(item => ({...item, dateForChart: format(parseISO(item.date), 'MMM d') })),
+      totalWords: allWords.length,
+      totalStudied,
+      easyWords,
+      mediumWords,
+      hardWords,
     };
   }, [allWords]);
 
-  const { dailyWordCounts, goalMetDays, chartData } = processedData;
+  const { 
+    dailyWordCounts, 
+    goalMetDays, 
+    chartData,
+    totalWords,
+    totalStudied,
+    easyWords,
+    mediumWords,
+    hardWords 
+  } = processedData;
 
   if (authLoading || vocabLoading) {
     return (
@@ -98,7 +141,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (allWords.length === 0) {
+  if (allWords.length === 0 && !vocabLoading) { // Added !vocabLoading to ensure data is settled
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Alert className="max-w-lg text-center bg-accent/10 border-accent/30 mt-8">
@@ -116,7 +159,35 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <h1 className="text-4xl font-headline text-primary">Your Progress Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="shadow-lg bg-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
+              <Sigma className="h-7 w-7 text-primary" />
+              Total Words
+            </CardTitle>
+            <CardDescription>All words in your vocabulary list.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-5xl font-bold text-primary">{totalWords}</p>
+            <p className="text-muted-foreground">word{totalWords === 1 ? '' : 's'} in total</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg bg-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
+              <BookCheck className="h-7 w-7 text-primary" />
+              Words Studied
+            </CardTitle>
+            <CardDescription>Words you have marked as "learned".</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-5xl font-bold text-primary">{totalStudied}</p>
+            <p className="text-muted-foreground">{Math.round((totalStudied / (totalWords || 1)) * 100)}% of total</p>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-lg bg-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
@@ -130,52 +201,80 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">day{goalMetDays.length === 1 ? '' : 's'} goal achieved</p>
           </CardContent>
         </Card>
-        
-        <Card className="shadow-lg bg-card md:col-span-1">
-           <CardHeader>
+      </div>
+
+      <Card className="shadow-lg bg-card">
+        <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
+                Words by Difficulty
+            </CardTitle>
+            <CardDescription>Breakdown of your vocabulary by difficulty level.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+            <div>
+                <Smile className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                <p className="text-3xl font-bold text-green-600">{easyWords}</p>
+                <p className="text-sm text-muted-foreground">Easy</p>
+            </div>
+            <div>
+                <Meh className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                <p className="text-3xl font-bold text-yellow-600">{mediumWords}</p>
+                <p className="text-sm text-muted-foreground">Medium</p>
+            </div>
+            <div>
+                <Frown className="h-8 w-8 text-red-500 mx-auto mb-2" />
+                <p className="text-3xl font-bold text-red-600">{hardWords}</p>
+                <p className="text-sm text-muted-foreground">Hard</p>
+            </div>
+        </CardContent>
+      </Card>
+        
+      <Card className="shadow-lg bg-card md:col-span-1">
+          <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
               <ChartIcon className="h-7 w-7 text-primary" />
               Words Added Per Day
-            </CardTitle>
-            <CardDescription>Visualizing your daily vocabulary additions.</CardDescription>
+          </CardTitle>
+          <CardDescription>Visualizing your daily vocabulary additions.</CardDescription>
           </CardHeader>
           <CardContent>
-            {chartData.length > 0 ? (
+          {chartData.length > 0 ? (
               <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border)/0.5)" />
-                    <XAxis 
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border)/0.5)" />
+                  <XAxis 
                       dataKey="dateForChart" 
                       tickLine={false} 
                       axisLine={false} 
                       stroke="hsl(var(--muted-foreground))"
                       fontSize={12}
-                    />
-                    <YAxis 
+                  />
+                  <YAxis 
                       stroke="hsl(var(--muted-foreground))" 
                       fontSize={12} 
                       allowDecimals={false} 
                       tickLine={false} 
                       axisLine={false}
-                    />
-                    <RechartsTooltip 
+                  />
+                  <RechartsTooltip 
                       cursor={{ fill: 'hsl(var(--accent)/0.3)' }}
                       content={<ChartTooltipContent indicator="dot" />} 
-                    />
-                    <ReferenceLine y={DAILY_GOAL} stroke="hsl(var(--destructive))" strokeDasharray="3 3">
-                       <RechartsTooltip.Label value={`Goal: ${DAILY_GOAL}`} position="insideTopRight" fill="hsl(var(--destructive))" fontSize={10} />
-                    </ReferenceLine>
-                    <Bar dataKey="count" name="Words Added" fill="var(--color-wordsAdded)" radius={[4, 4, 0, 0]} />
+                  />
+                  <ReferenceLine y={DAILY_GOAL} stroke="hsl(var(--destructive))" strokeDasharray="3 3">
+                      {/* For Recharts 2.x, RechartsTooltip.Label might not work. We can render a label component or simply let the reference line be. */}
+                      {/* For simplicity, if RechartsTooltip.Label causes issues, it can be omitted. The user can see the line. */}
+                      {/* <RechartsTooltip.Label value={`Goal: ${DAILY_GOAL}`} position="insideTopRight" fill="hsl(var(--destructive))" fontSize={10} /> */}
+                  </ReferenceLine>
+                  <Bar dataKey="count" name="Words Added" fill="var(--color-wordsAdded)" radius={[4, 4, 0, 0]} />
                   </BarChart>
-                </ResponsiveContainer>
+              </ResponsiveContainer>
               </ChartContainer>
-            ) : (
+          ) : (
               <p className="text-muted-foreground text-center py-10">No word data to display in chart yet.</p>
-            )}
+          )}
           </CardContent>
-        </Card>
-      </div>
+      </Card>
 
 
       {goalMetDays.length > 0 && (
@@ -211,3 +310,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
