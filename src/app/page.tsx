@@ -7,11 +7,12 @@ import VocabularyList from '@/components/vocabulary/VocabularyList';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { Button } from '@/components/ui/button';
 import type { DifficultyFilter } from '@/types';
-import { ListFilter, Check } from 'lucide-react';
+import { ListFilter, Check, Shuffle } from 'lucide-react';
 
 export default function Home() {
   const { words, loading, addWord, toggleLearnedStatus, deleteWord, updateWordDifficulty } = useVocabulary();
   const [selectedDifficultyFilter, setSelectedDifficultyFilter] = useState<DifficultyFilter>('all');
+  const [isTodayRandomized, setIsTodayRandomized] = useState(false);
 
   const difficultyFilters: { label: string; value: DifficultyFilter }[] = [
     { label: 'All', value: 'all' },
@@ -39,6 +40,15 @@ export default function Home() {
             {filter.label}
           </Button>
         ))}
+        <Button
+          variant={isTodayRandomized ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setIsTodayRandomized(!isTodayRandomized)}
+          className="transition-all duration-150 ease-in-out"
+        >
+          <Shuffle className="h-4 w-4 mr-1" />
+          {isTodayRandomized ? "Sort Today Chronologically" : "Randomize Today's Words"}
+        </Button>
       </div>
 
       <VocabularyList
@@ -48,6 +58,7 @@ export default function Home() {
         deleteWord={deleteWord}
         updateWordDifficulty={updateWordDifficulty}
         selectedDifficultyFilter={selectedDifficultyFilter}
+        isTodayRandomized={isTodayRandomized}
       />
       <AddVocabularyDialog onAddWord={addWord} />
     </div>
