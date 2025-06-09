@@ -16,9 +16,12 @@ const InitialThemeScript = () => {
       const theme = localStorage.getItem('nihongo-daily-theme');
       if (theme && theme !== 'default') {
         document.documentElement.setAttribute('data-theme', theme);
+      } else if (!theme) {
+        // Optional: set a default theme if nothing is in localStorage
+        // document.documentElement.setAttribute('data-theme', 'default'); 
       }
     })();
-  `.trim(); // Added .trim() here to remove leading/trailing whitespace
+  `.trim();
   return <script dangerouslySetInnerHTML={{ __html: script }} />;
 };
 
@@ -28,9 +31,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true}>
       <head>
-        <InitialThemeScript /> {/* Add script for initial theme loading */}
+        <InitialThemeScript />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Belleza&display=swap" rel="stylesheet" />
