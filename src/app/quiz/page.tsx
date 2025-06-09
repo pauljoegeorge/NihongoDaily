@@ -61,13 +61,10 @@ export default function QuizPage() {
     const currentWord = quizWords[currentWordIndex];
 
     if (!knewIt) {
-      // If they didn't know it, and it was marked as learned, toggle its status.
-      // The toggleLearnedStatus function handles the logic of flipping the boolean.
       if (currentWord.learned) {
          await toggleLearnedStatus(currentWord.id);
       }
     }
-    // If they knew it, and it's already learned, no DB change needed.
 
     if (currentWordIndex < quizWords.length - 1) {
       setCurrentWordIndex(currentWordIndex + 1);
@@ -178,45 +175,45 @@ export default function QuizPage() {
       </p>
       <Card className="w-full max-w-lg min-h-[420px] shadow-2xl bg-card relative overflow-hidden transition-all duration-500 ease-in-out transform-style-preserve-3d">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
-          {/* Front of Card: Removed justify-center */}
+          {/* Front of Card */}
           <div className={`absolute w-full h-full flex flex-col items-center backface-hidden p-4 text-center ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <p className="font-headline text-5xl text-primary mb-4 break-words max-w-full">{currentWord.japanese}</p>
             <Button variant="outline" onClick={handleFlipCard}>Flip Card</Button>
           </div>
 
-          {/* Back of Card: Removed justify-center */}
+          {/* Back of Card */}
           <div className={`absolute w-full h-full flex flex-col items-center space-y-3 backface-hidden rotate-y-180 p-4 text-center ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <p className="text-2xl text-foreground font-semibold">{currentWord.romaji}</p>
             <p className="text-lg text-muted-foreground">{currentWord.definition}</p>
-            <Button variant="outline" onClick={handleFlipCard} className="mt-4">Flip Back</Button>
+            <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">Flip Back</Button>
+            
+            <div className="flex gap-4 mt-2">
+              <Button 
+                onClick={() => handleAnswer(false)} 
+                variant="destructive" 
+                size="icon" 
+                className="h-12 w-12 rounded-full"
+                aria-label="Didn't know"
+                disabled={processingAnswer}
+              >
+                {processingAnswer ? <Loader2 className="h-6 w-6 animate-spin" /> : <XCircle className="h-6 w-6" />}
+              </Button>
+              <Button 
+                onClick={() => handleAnswer(true)} 
+                variant="default" 
+                size="icon" 
+                className="h-12 w-12 rounded-full bg-green-500 hover:bg-green-600 text-white"
+                aria-label="Knew it"
+                disabled={processingAnswer}
+              >
+                {processingAnswer ? <Loader2 className="h-6 w-6 animate-spin" /> : <CheckCircle className="h-6 w-6" />}
+              </Button>
+            </div>
           </div>
         </div>
       </Card>
 
-      {isFlipped && (
-        <div className="flex flex-col sm:flex-row gap-4 mt-6 animate-in fade-in duration-500">
-          <Button 
-            onClick={() => handleAnswer(false)} 
-            variant="destructive" 
-            size="lg" 
-            className="w-full sm:w-auto text-lg px-8 py-6"
-            disabled={processingAnswer}
-          >
-            {processingAnswer ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <XCircle className="mr-2 h-5 w-5" />}
-            Didn't Know
-          </Button>
-          <Button 
-            onClick={() => handleAnswer(true)} 
-            variant="default" 
-            size="lg" 
-            className="w-full sm:w-auto text-lg px-8 py-6 bg-green-600 hover:bg-green-700 text-white"
-            disabled={processingAnswer}
-          >
-            {processingAnswer ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CheckCircle className="mr-2 h-5 w-5" />}
-            Knew It!
-          </Button>
-        </div>
-      )}
+      {/* Removed the old conditional button rendering block from here */}
       <style jsx global>{`
         .transform-style-preserve-3d { transform-style: preserve-3d; }
         .rotate-y-180 { transform: rotateY(180deg); }
@@ -225,4 +222,3 @@ export default function QuizPage() {
     </div>
   );
 }
-
