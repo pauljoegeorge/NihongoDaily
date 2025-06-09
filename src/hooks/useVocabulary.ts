@@ -69,7 +69,7 @@ export function useVocabulary() {
       });
       setWords(fetchedWords);
       setLoading(false);
-      console.log(`useVocabulary: Fetched ${fetchedWords.length} words from Firestore.`);
+      console.log(`useVocabulary: Fetched ${fetchedWords.length} words from Firestore via onSnapshot.`);
     }, (error) => {
       console.error("Detailed Firestore Error in onSnapshot:", error);
       setLoading(false);
@@ -99,60 +99,61 @@ export function useVocabulary() {
     }
   }, [user, toast]);
 
-  const addWord = useCallback(async (newWordData: Omit<VocabularyWord, 'id' | 'learned' | 'createdAt'>) => {
+  const addWord = useCallback(async (newWordData: Omit<VocabularyWord, 'id' | 'learned' | 'createdAt'>): Promise<VocabularyWord | undefined> => {
     if (!user) {
       toast({ title: "Not Authenticated", description: "You must be signed in to add words.", variant: "destructive" });
       return undefined;
     }
 
-    console.log(`useVocabulary: Attempting to add word to Firestore for user ${user.uid}:`, newWordData);
+    console.log(`[DIAGNOSTIC] useVocabulary: Attempting to add word for user ${user.uid}:`, newWordData);
+    const vocabularyCollectionRef = collection(db, 'vocabulary');
+    const firestoreDocData: FirestoreVocabularyWord = {
+      japanese: newWordData.japanese,
+      definition: newWordData.definition,
+      romaji: newWordData.romaji,
+      exampleSentences: newWordData.exampleSentences || [],
+      learned: false,
+      createdAt: serverTimestamp(),
+      difficulty: newWordData.difficulty || 'medium',
+      userId: user.uid,
+    };
+
     try {
-      const vocabularyCollectionRef = collection(db, 'vocabulary');
-      const firestoreDocData: FirestoreVocabularyWord = {
+      console.log("[DIAGNOSTIC] useVocabulary: Calling addDoc with data:", firestoreDocData);
+      const docRef = await addDoc(vocabularyCollectionRef, firestoreDocData);
+      console.log("[DIAGNOSTIC] useVocabulary: addDoc successful, docRef ID:", docRef.id);
+      
+      // For faster UI response, we'll rely on onSnapshot to provide the full data with server timestamp.
+      // We show a success toast immediately.
+      toast({ title: "Success!", description: `Word "${newWordData.japanese}" submitted to the database. It will appear shortly.` });
+      
+      // Return a temporary representation or just an indication of success.
+      // The actual full object with server timestamp will come from the onSnapshot listener.
+      return { 
+        id: docRef.id, 
         japanese: newWordData.japanese,
         definition: newWordData.definition,
         romaji: newWordData.romaji,
-        exampleSentences: newWordData.exampleSentences || [], // Ensure it's an array
+        exampleSentences: newWordData.exampleSentences || [],
         learned: false, 
-        createdAt: serverTimestamp(), 
-        difficulty: newWordData.difficulty || 'medium', // Ensure difficulty has a value
-        userId: user.uid,
-      };
-      
-      const docRef = await addDoc(vocabularyCollectionRef, firestoreDocData);
-      
-      const newDocSnapshot = await getDoc(docRef);
-      if (newDocSnapshot.exists()) {
-        const data = newDocSnapshot.data();
-        const createdAtMillis = data.createdAt instanceof FirestoreTimestamp ? data.createdAt.toMillis() : Date.now();
-        const addedWord: VocabularyWord = {
-          id: newDocSnapshot.id,
-          japanese: data.japanese,
-          definition: data.definition,
-          romaji: data.romaji,
-          exampleSentences: data.exampleSentences || [],
-          learned: data.learned,
-          createdAt: createdAtMillis,
-          difficulty: data.difficulty || 'medium',
-        };
-        toast({ title: "Success!", description: `Word "${addedWord.japanese}" added to your database.` });
-        console.log("useVocabulary: Word successfully added to Firestore, ID:", docRef.id);
-        return addedWord;
-      }
+        createdAt: Date.now(), // Temporary client timestamp
+        difficulty: newWordData.difficulty || 'medium'
+      } as VocabularyWord;
+
     } catch (error: any) {
-      console.error("Detailed Firestore Error in addWord:", error);
-      let description = "Could not add word. Please try again.";
+      console.error("[DIAGNOSTIC] Detailed Firestore Error in addWord:", error);
+      let description = "Could not add word. Please try again. Check console for details.";
       if (error.code) {
         description = `Error adding word: ${error.message} (Code: ${error.code})`;
         if (error.code === 'permission-denied') {
-          description += " Check Firestore rules to allow creating documents.";
+          description += " Check Firestore rules.";
         }
       } else if (error.message) {
         description = `Error adding word: ${error.message}`;
       }
       toast({ title: "Database Error", description, variant: "destructive" });
+      return undefined;
     }
-    return undefined;
   }, [user, toast]);
 
   const toggleLearnedStatus = useCallback(async (wordId: string) => {
@@ -160,27 +161,32 @@ export function useVocabulary() {
 
     const wordRef = doc(db, 'vocabulary', wordId);
     try {
+      console.log(`[DIAGNOSTIC] useVocabulary: Getting doc ${wordId} to toggle learned status.`);
       const docSnap = await getDoc(wordRef);
+      console.log(`[DIAGNOSTIC] useVocabulary: Got doc ${wordId}. Exists: ${docSnap.exists()}`);
       if (docSnap.exists()) {
         if (docSnap.data().userId !== user.uid) {
-          toast({ title: "Error", description: "Cannot modify this word.", variant: "destructive" });
+          toast({ title: "Error", description: "Cannot modify this word (permission).", variant: "destructive" });
           return;
         }
         const currentLearnedStatus = docSnap.data().learned;
+        console.log(`[DIAGNOSTIC] useVocabulary: Updating learned status for ${wordId} to ${!currentLearnedStatus}.`);
         await updateDoc(wordRef, { learned: !currentLearnedStatus });
+        console.log(`[DIAGNOSTIC] useVocabulary: Update successful for ${wordId}.`);
         toast({
           title: "Progress Updated",
           description: `Word marked as ${!currentLearnedStatus ? 'learned' : 'not learned'}.`,
         });
+      } else {
+        console.warn(`[DIAGNOSTIC] useVocabulary: Word ${wordId} not found for toggleLearnedStatus.`);
+        toast({ title: "Error", description: "Word not found.", variant: "destructive" });
       }
-    } catch (error: any) {
-      console.error("Detailed Firestore Error in toggleLearnedStatus:", error);
-      let description = "Could not update learned status.";
+    } catch (error: any)
+     {
+      console.error("[DIAGNOSTIC] Detailed Firestore Error in toggleLearnedStatus:", error);
+      let description = "Could not update learned status. Check console.";
       if (error.code) {
         description = `Error: ${error.message} (Code: ${error.code})`;
-        if (error.code === 'permission-denied') {
-          description += " Check Firestore rules.";
-        }
       } else if (error.message) {
         description = `Error: ${error.message}`;
       }
@@ -193,22 +199,23 @@ export function useVocabulary() {
 
     const wordRef = doc(db, 'vocabulary', wordId);
     try {
+      console.log(`[DIAGNOSTIC] useVocabulary: Getting doc ${wordId} to delete.`);
       const docSnap = await getDoc(wordRef);
+      console.log(`[DIAGNOSTIC] useVocabulary: Got doc ${wordId} for deletion. Exists: ${docSnap.exists()}`);
       const wordJapanese = docSnap.exists() ? docSnap.data().japanese : "Word";
       if (docSnap.exists() && docSnap.data().userId !== user.uid) {
-         toast({ title: "Error", description: "Cannot delete this word.", variant: "destructive" });
+         toast({ title: "Error", description: "Cannot delete this word (permission).", variant: "destructive" });
          return;
       }
+      console.log(`[DIAGNOSTIC] useVocabulary: Deleting doc ${wordId}.`);
       await deleteDoc(wordRef);
+      console.log(`[DIAGNOSTIC] useVocabulary: Deletion successful for ${wordId}.`);
       toast({ title: "Word Deleted", description: `"${wordJapanese}" has been removed from your database.` });
     } catch (error: any) {
-      console.error("Detailed Firestore Error in deleteWord:", error);
-      let description = "Could not delete word.";
+      console.error("[DIAGNOSTIC] Detailed Firestore Error in deleteWord:", error);
+      let description = "Could not delete word. Check console.";
       if (error.code) {
         description = `Error: ${error.message} (Code: ${error.code})`;
-        if (error.code === 'permission-denied') {
-          description += " Check Firestore rules.";
-        }
       } else if (error.message) {
         description = `Error: ${error.message}`;
       }
@@ -221,22 +228,23 @@ export function useVocabulary() {
     
     const wordRef = doc(db, 'vocabulary', wordId);
     try {
+      console.log(`[DIAGNOSTIC] useVocabulary: Getting doc ${wordId} to update difficulty.`);
       const docSnap = await getDoc(wordRef);
+      console.log(`[DIAGNOSTIC] useVocabulary: Got doc ${wordId} for difficulty update. Exists: ${docSnap.exists()}`);
       const wordJapanese = docSnap.exists() ? docSnap.data().japanese : "Word";
       if (docSnap.exists() && docSnap.data().userId !== user.uid) {
-         toast({ title: "Error", description: "Cannot update difficulty for this word.", variant: "destructive" });
+         toast({ title: "Error", description: "Cannot update difficulty for this word (permission).", variant: "destructive" });
          return;
       }
+      console.log(`[DIAGNOSTIC] useVocabulary: Updating difficulty for ${wordId} to ${difficulty}.`);
       await updateDoc(wordRef, { difficulty });
+      console.log(`[DIAGNOSTIC] useVocabulary: Difficulty update successful for ${wordId}.`);
       toast({ title: "Difficulty Updated", description: `"${wordJapanese}" marked as ${difficulty}.` });
     } catch (error: any) {
-      console.error("Detailed Firestore Error in updateWordDifficulty:", error);
-      let description = "Could not update difficulty.";
+      console.error("[DIAGNOSTIC] Detailed Firestore Error in updateWordDifficulty:", error);
+      let description = "Could not update difficulty. Check console.";
       if (error.code) {
         description = `Error: ${error.message} (Code: ${error.code})`;
-        if (error.code === 'permission-denied') {
-          description += " Check Firestore rules.";
-        }
       } else if (error.message) {
         description = `Error: ${error.message}`;
       }
