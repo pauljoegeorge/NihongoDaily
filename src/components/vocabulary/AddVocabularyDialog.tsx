@@ -22,12 +22,13 @@ import { PlusCircle, Loader2 } from 'lucide-react';
 import type { VocabularyWord } from '@/types';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
+  Form, // Added Form import
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"; // Imported Form components
+} from "@/components/ui/form";
 
 
 const difficultyLevels = z.enum(['easy', 'medium', 'hard']);
@@ -100,106 +101,108 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
             Enter the details for the new Japanese word. You can also add example sentences, each on a new line.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="japanese" className="text-foreground">Japanese Word</Label>
-            <Input
-              id="japanese"
-              {...form.register('japanese')}
-              className="mt-1 bg-background"
-              aria-invalid={form.formState.errors.japanese ? "true" : "false"}
-            />
-            {form.formState.errors.japanese && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.japanese.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="romaji" className="text-foreground">Reading</Label>
-            <Input
-              id="romaji"
-              {...form.register('romaji')}
-              className="mt-1 bg-background"
-              aria-invalid={form.formState.errors.romaji ? "true" : "false"}
-            />
-            {form.formState.errors.romaji && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.romaji.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="definition" className="text-foreground">Definition (English)</Label>
-            <Input
-              id="definition"
-              {...form.register('definition')}
-              className="mt-1 bg-background"
-              aria-invalid={form.formState.errors.definition ? "true" : "false"}
-            />
-            {form.formState.errors.definition && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.definition.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="exampleSentences" className="text-foreground">Example Sentences (one per line)</Label>
-            <Textarea
-              id="exampleSentences"
-              {...form.register('exampleSentences')}
-              className="mt-1 bg-background"
-              rows={3}
-            />
-          </div>
-          
-          <FormField
-            control={form.control}
-            name="difficulty"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel className="text-foreground">Difficulty</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex space-x-4"
-                  >
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="easy" />
-                      </FormControl>
-                      <FormLabel className="font-normal text-foreground">Easy</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="medium" />
-                      </FormControl>
-                      <FormLabel className="font-normal text-foreground">Medium</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="hard" />
-                      </FormControl>
-                      <FormLabel className="font-normal text-foreground">Hard</FormLabel>
-                    </FormItem>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                'Add Word'
+        <Form {...form}> {/* Wrap form content with Form provider */}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="japanese" className="text-foreground">Japanese Word</Label>
+              <Input
+                id="japanese"
+                {...form.register('japanese')}
+                className="mt-1 bg-background"
+                aria-invalid={form.formState.errors.japanese ? "true" : "false"}
+              />
+              {form.formState.errors.japanese && (
+                <p className="text-sm text-destructive mt-1">{form.formState.errors.japanese.message}</p>
               )}
-            </Button>
-          </DialogFooter>
-        </form>
+            </div>
+            <div>
+              <Label htmlFor="romaji" className="text-foreground">Reading</Label>
+              <Input
+                id="romaji"
+                {...form.register('romaji')}
+                className="mt-1 bg-background"
+                aria-invalid={form.formState.errors.romaji ? "true" : "false"}
+              />
+              {form.formState.errors.romaji && (
+                <p className="text-sm text-destructive mt-1">{form.formState.errors.romaji.message}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="definition" className="text-foreground">Definition (English)</Label>
+              <Input
+                id="definition"
+                {...form.register('definition')}
+                className="mt-1 bg-background"
+                aria-invalid={form.formState.errors.definition ? "true" : "false"}
+              />
+              {form.formState.errors.definition && (
+                <p className="text-sm text-destructive mt-1">{form.formState.errors.definition.message}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="exampleSentences" className="text-foreground">Example Sentences (one per line)</Label>
+              <Textarea
+                id="exampleSentences"
+                {...form.register('exampleSentences')}
+                className="mt-1 bg-background"
+                rows={3}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="difficulty"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel className="text-foreground">Difficulty</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="easy" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-foreground">Easy</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="medium" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-foreground">Medium</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="hard" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-foreground">Hard</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  'Add Word'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
