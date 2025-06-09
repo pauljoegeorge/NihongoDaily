@@ -6,7 +6,7 @@ import type { VocabularyWord } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, Circle, BarChart3, ChevronDown, Edit3 } from 'lucide-react';
+import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, XCircle, BarChart3, ChevronDown, Edit3 } from 'lucide-react'; // Added XCircle
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '../ui/separator';
 import {
@@ -73,15 +73,31 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-               <Button
-                variant={word.learned ? "secondary" : "outline"}
-                size="sm"
-                onClick={() => onToggleLearned(word.id)}
-                className="flex items-center gap-1 text-sm"
-              >
-                {word.learned ? <Circle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-                {word.learned ? 'Mark as Unlearned' : 'Mark as Learned'}
-              </Button>
+              
+              {!word.learned && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onToggleLearned(word.id)}
+                  className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                  aria-label="Mark as Learned"
+                  title="Mark as Learned"
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                </Button>
+              )}
+              {word.learned && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onToggleLearned(word.id)}
+                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                  aria-label="Mark as Unlearned"
+                  title="Mark as Unlearned"
+                >
+                  <XCircle className="h-5 w-5" />
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -154,4 +170,3 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
     </>
   );
 }
-
