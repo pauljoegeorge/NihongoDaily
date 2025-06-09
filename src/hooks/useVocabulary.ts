@@ -22,7 +22,7 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy, 
+  orderBy,
   onSnapshot,
   getDoc
 } from 'firebase/firestore';
@@ -38,42 +38,33 @@ export function useVocabulary() {
       setWords([]);
       setLoading(false);
       console.log("[DIAGNOSTIC] useVocabulary: No user, clearing words and stopping listener.");
-      return;
+      return () => {}; // Return an empty function for cleanup if no user
     }
 
     const userIdForQuery = user.uid;
     console.log(`[DIAGNOSTIC] useVocabulary: Setting up Firestore listener for user ID: ${userIdForQuery}`);
     setLoading(true);
     const vocabularyCollectionRef = collection(db, 'vocabulary');
-    
-    // TEMPORARY DIAGNOSTIC: Simplest possible query to see if *any* listener can be established.
-    const q = query(vocabularyCollectionRef);
-    console.log("[DIAGNOSTIC] useVocabulary: Using TEMPORARILY SIMPLIFIED query (no where/orderBy) for onSnapshot:", q);
 
-    // Original query - commented out for diagnostics
-    // const q = query(
-    //   vocabularyCollectionRef,
-    //   where('userId', '==', userIdForQuery),
-    //   orderBy('createdAt', 'desc') 
-    // );
-    // console.log("[DIAGNOSTIC] useVocabulary: Query constructed for onSnapshot:", q);
-
+    const q = query(
+      vocabularyCollectionRef,
+      where('userId', '==', userIdForQuery),
+      orderBy('createdAt', 'desc')
+    );
+    console.log("[DIAGNOSTIC] useVocabulary: Query constructed for onSnapshot:", q);
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedWords: VocabularyWord[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        // If using the simplified query, we might get words for all users.
-        // For now, let's process them to see if the listener itself works.
-        // We would filter client-side if this temporary query were to remain (which it won't).
+      querySnapshot.forEach((docSnapshot) => { // Renamed doc to docSnapshot for clarity
+        const data = docSnapshot.data();
         const createdAtMillis = data.createdAt instanceof FirestoreTimestamp
           ? data.createdAt.toMillis()
-          : data.createdAt?.seconds
+          : data.createdAt?.seconds // Handle cases where it might be a plain object from Firebase
             ? data.createdAt.seconds * 1000 + (data.createdAt.nanoseconds || 0) / 1000000
-            : Date.now();
+            : Date.now(); // Fallback, though ideally createdAt is always a Timestamp
 
         fetchedWords.push({
-          id: doc.id,
+          id: docSnapshot.id,
           japanese: data.japanese,
           definition: data.definition,
           romaji: data.romaji,
@@ -81,12 +72,11 @@ export function useVocabulary() {
           learned: data.learned,
           createdAt: createdAtMillis,
           difficulty: data.difficulty || 'medium',
-          // userId: data.userId // Include if present, useful for debugging the simplified query
         });
       });
-      setWords(fetchedWords); // For the simplified query, you might want to filter by userId client-side if testing for long
+      setWords(fetchedWords);
       setLoading(false);
-      console.log(`[DIAGNOSTIC] useVocabulary: Fetched ${fetchedWords.length} words with the current query from Firestore via onSnapshot.`);
+      console.log(`[DIAGNOSTIC] useVocabulary: Fetched ${fetchedWords.length} words from Firestore via onSnapshot.`);
     }, (error: any) => {
       console.error("[DIAGNOSTIC] Full Firestore Error object in onSnapshot listener:", error);
       const errorCode = error.code || 'N/A';
@@ -99,33 +89,36 @@ export function useVocabulary() {
 
       if (errorCode === 'failed-precondition' || errorMessage.toLowerCase().includes('index') || errorMessage.toLowerCase().includes('requires an index')) {
         title = "Firestore Indexing Error (Listener)";
-        description = `A required Firestore index for the vocabulary listener is missing, not yet built, or incorrect. Please go to your Firebase Console (Firestore > Indexes) for project 'nihongo-daily-6s2a3' and ensure you have the correct composite index. The error message from Firestore was: "${errorMessage}"`;
+        description = `A required Firestore index for the vocabulary listener is missing, not yet built, or incorrect. Please go to your Firebase Console (Firestore > Indexes) for project '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}' and ensure you have the correct composite index for collection 'vocabulary' with fields 'userId' (Ascending) then 'createdAt' (Descending). The error message from Firestore was: "${errorMessage}"`;
       } else if (errorCode === 'permission-denied' || errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')) {
         title = "Permission Denied (Listener)";
-        description = "You don't have permission to read vocabulary. Check Firestore rules for project 'nihongo-daily-6s2a3'.";
+        description = `You don't have permission to read vocabulary. Check Firestore rules for project '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}'.`;
       } else if (error.name === 'FirebaseError' && error.code === 'cancelled') {
         console.warn("[DIAGNOSTIC] Firestore onSnapshot listener was cancelled. This is often normal during component unmount or query changes.");
-        return; 
+        return;
       } else if (error.name === 'FirebaseError' && error.code === 'unimplemented') {
         title = "Operation Not Supported (Listener)";
         description = "The query operation is not supported. This can sometimes happen with complex queries or if there's a data type mismatch in 'createdAt' fields. " + errorMessage;
-      } else if (errorCode === 400 || error.status === 400 || (typeof error === 'object' && error !== null && 'status' in error && error.status === 400)) {
+      } else if (error.status === 400 || errorCode === 'invalid-argument' || (typeof error === 'object' && error !== null && 'status' in error && (error as any).status === 400)) {
         title = "Error 400 (Bad Request) from Firestore";
         description = `Firestore rejected the request to listen for updates. This often means an issue with the query (like a missing index) or data. Original error: ${errorMessage}`;
+      } else {
+        title = `Firestore Error (${errorCode})`;
+        description = `An unexpected error occurred while fetching vocabulary: ${errorMessage}`;
       }
       
       toast({
         title: title,
         description: description,
         variant: "destructive",
-        duration: 20000, 
+        duration: 20000,
       });
     });
 
     return () => {
       console.log(`[DIAGNOSTIC] useVocabulary: Unsubscribing from Firestore listener for user ${userIdForQuery}.`);
       unsubscribe();
-    }
+    };
   }, [user, toast]); // Added user and toast as dependencies
 
   const addWord = useCallback(async (newWordData: Omit<VocabularyWord, 'id' | 'learned' | 'createdAt'>): Promise<VocabularyWord | undefined> => {
@@ -142,7 +135,7 @@ export function useVocabulary() {
       romaji: newWordData.romaji,
       exampleSentences: newWordData.exampleSentences || [],
       learned: false,
-      createdAt: serverTimestamp(),
+      createdAt: serverTimestamp(), // Use serverTimestamp for reliable ordering
       difficulty: newWordData.difficulty || 'medium',
       userId: user.uid,
     };
@@ -150,18 +143,16 @@ export function useVocabulary() {
     try {
       console.log("[DIAGNOSTIC] useVocabulary: Calling addDoc with data:", firestoreDocData);
       const docRef = await addDoc(vocabularyCollectionRef, firestoreDocData);
-      console.log("[DIAGNOSTIC] useVocabulary: addDoc successful, docRef ID:", docRef.id);
+      console.log("[DIAGNOSTIC] useVocabulary: Word successfully submitted to Firestore, docRef ID:", docRef.id);
       
-      // Simplified success path: let onSnapshot handle UI updates.
       toast({ title: "Success!", description: `Word "${newWordData.japanese}" submitted. It will appear shortly.` });
       
-      // Return a client-side representation immediately if needed for optimistic updates,
-      // but the server-confirmed data comes via onSnapshot.
+      // Return a client-side representation. The `onSnapshot` listener will provide the server-confirmed data.
       return {
-        id: docRef.id, 
+        id: docRef.id,
         ...newWordData,
         learned: false,
-        createdAt: Date.now(), // This is a temporary client-side timestamp
+        createdAt: Date.now(), // Temporary client-side timestamp, will be replaced by listener
       } as VocabularyWord;
 
     } catch (error: any) {
@@ -172,7 +163,7 @@ export function useVocabulary() {
 
       let description = `Could not add word. Code: ${errorCode}. Message: ${errorMessage}.`;
       if (errorCode === 'permission-denied') {
-        description += " Check Firestore rules for project 'nihongo-daily-6s2a3'.";
+        description += ` Check Firestore rules for project '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}'.`;
       }
       toast({ title: "Database Error", description, variant: "destructive", duration: 10000 });
       return undefined;
@@ -180,7 +171,10 @@ export function useVocabulary() {
   }, [user, toast]);
 
   const toggleLearnedStatus = useCallback(async (wordId: string) => {
-    if (!user) return;
+    if (!user) {
+       toast({ title: "Not Authenticated", description: "You must be signed in to update words.", variant: "destructive" });
+       return;
+    }
 
     const wordRef = doc(db, 'vocabulary', wordId);
     try {
@@ -209,20 +203,22 @@ export function useVocabulary() {
   }, [user, toast]);
 
   const deleteWord = useCallback(async (wordId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast({ title: "Not Authenticated", description: "You must be signed in to delete words.", variant: "destructive" });
+      return;
+    }
 
     const wordRef = doc(db, 'vocabulary', wordId);
     try {
       const docSnap = await getDoc(wordRef);
-      const wordJapanese = docSnap.exists() ? docSnap.data().japanese : "Word";
-      if (docSnap.exists() && docSnap.data().userId !== user.uid) {
+      const wordJapanese = docSnap.exists() ? docSnap.data().japanese : "Word"; // Get Japanese name for toast
+      if (docSnap.exists() && docSnap.data().userId !== user.uid) { // Check ownership before delete
          toast({ title: "Error", description: "Cannot delete this word (permission).", variant: "destructive" });
          return;
       }
       await deleteDoc(wordRef);
       toast({ title: "Word Deleted", description: `"${wordJapanese}" has been removed from your database.` });
-    } catch (error: any)
-    {
+    } catch (error: any) {
       console.error("[DIAGNOSTIC] Full Firestore Error object in deleteWord:", error);
       const errorCode = error.code || 'N/A';
       const errorMessage = error.message || 'No specific message';
@@ -232,13 +228,16 @@ export function useVocabulary() {
   }, [user, toast]);
 
   const updateWordDifficulty = useCallback(async (wordId: string, difficulty: Difficulty) => {
-    if (!user) return;
+    if (!user) {
+      toast({ title: "Not Authenticated", description: "You must be signed in to update difficulty.", variant: "destructive" });
+      return;
+    }
     
     const wordRef = doc(db, 'vocabulary', wordId);
     try {
       const docSnap = await getDoc(wordRef);
-      const wordJapanese = docSnap.exists() ? docSnap.data().japanese : "Word";
-      if (docSnap.exists() && docSnap.data().userId !== user.uid) {
+      const wordJapanese = docSnap.exists() ? docSnap.data().japanese : "Word"; // Get Japanese name for toast
+      if (docSnap.exists() && docSnap.data().userId !== user.uid) { // Check ownership
          toast({ title: "Error", description: "Cannot update difficulty for this word (permission).", variant: "destructive" });
          return;
       }
@@ -255,4 +254,3 @@ export function useVocabulary() {
   
   return { words, loading, addWord, toggleLearnedStatus, deleteWord, updateWordDifficulty };
 }
-    
