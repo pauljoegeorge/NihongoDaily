@@ -94,7 +94,7 @@ export default function QuizPage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-        <Alert className="max-w-md text-center bg-primary/5 border-primary/20">
+        <Alert className="max-w-md text-center bg-primary/5 border-primary/20 mt-8">
           <HelpCircle className="h-6 w-6 mx-auto mb-3 text-primary" />
           <AlertTitle className="font-headline text-2xl text-primary mb-2">Sign In Required</AlertTitle>
           <AlertDescription className="text-primary-foreground/80">
@@ -109,7 +109,7 @@ export default function QuizPage() {
     if (learnedWords.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-          <Alert className="max-w-lg text-center bg-accent/10 border-accent/30">
+          <Alert className="max-w-lg text-center bg-accent/10 border-accent/30 mt-8">
             <HelpCircle className="h-8 w-8 mx-auto mb-4 text-accent-foreground" />
             <AlertTitle className="font-headline text-2xl text-accent-foreground mb-2">No Learned Words for Quiz</AlertTitle>
             <AlertDescription className="text-muted-foreground mb-4">
