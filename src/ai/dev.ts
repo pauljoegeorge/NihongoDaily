@@ -1,4 +1,5 @@
+
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/generate-example-sentences.ts';
+// Removed: import '@/ai/flows/generate-example-sentences.ts';

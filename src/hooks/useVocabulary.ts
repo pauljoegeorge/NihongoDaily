@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { VocabularyWord } from '@/types';
-import { generateExampleSentences } from '@/ai/flows/generate-example-sentences';
+// Removed: import { generateExampleSentences } from '@/ai/flows/generate-example-sentences';
 import { useToast } from "@/hooks/use-toast";
 
 const VOCABULARY_KEY = 'nihongoDailyVocabulary';
@@ -44,11 +44,10 @@ export function useVocabulary() {
     }
   }, [toast]);
 
-  const addWord = useCallback(async (newWordData: Omit<VocabularyWord, 'id' | 'exampleSentences' | 'learned' | 'createdAt'>) => {
+  const addWord = useCallback(async (newWordData: Omit<VocabularyWord, 'id' | 'learned' | 'createdAt'>) => {
     const newWord: VocabularyWord = {
-      ...newWordData,
+      ...newWordData, // newWordData now includes exampleSentences directly
       id: Date.now().toString(),
-      exampleSentences: [],
       learned: false,
       createdAt: Date.now(),
     };
@@ -57,34 +56,10 @@ export function useVocabulary() {
     persistWords(updatedWords);
     toast({
       title: "Success!",
-      description: `Word "${newWord.japanese}" added. Generating example sentences...`,
+      description: `Word "${newWord.japanese}" added.`,
     });
-
-    try {
-      const sentenceResult = await generateExampleSentences({ word: newWord.japanese });
-      if (sentenceResult && sentenceResult.sentences) {
-        const wordWithSentences = { ...newWord, exampleSentences: sentenceResult.sentences };
-        const finalWords = updatedWords.map(w => w.id === newWord.id ? wordWithSentences : w);
-        persistWords(finalWords);
-        toast({
-          title: "Sentences Generated!",
-          description: `Example sentences for "${newWord.japanese}" are ready.`,
-        });
-      } else {
-         toast({
-          title: "Notice",
-          description: `Could not generate example sentences for "${newWord.japanese}". You can try again later.`,
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Failed to generate example sentences", error);
-      toast({
-        title: "AI Error",
-        description: `Failed to generate example sentences for "${newWord.japanese}".`,
-        variant: "destructive",
-      });
-    }
+    
+    // Removed AI sentence generation logic
     return newWord;
   }, [words, persistWords, toast]);
 
@@ -119,45 +94,7 @@ export function useVocabulary() {
     }
   }, [words, persistWords, toast]);
   
-  const regenerateSentences = useCallback(async (wordId: string) => {
-    const wordToUpdate = words.find(w => w.id === wordId);
-    if (!wordToUpdate) {
-      toast({ title: "Error", description: "Word not found.", variant: "destructive" });
-      return;
-    }
+  // Removed regenerateSentences function
 
-    toast({
-      title: "Processing...",
-      description: `Regenerating sentences for "${wordToUpdate.japanese}".`,
-    });
-
-    try {
-      const sentenceResult = await generateExampleSentences({ word: wordToUpdate.japanese });
-      if (sentenceResult && sentenceResult.sentences) {
-        const updatedWordWithSentences = { ...wordToUpdate, exampleSentences: sentenceResult.sentences };
-        const finalWords = words.map(w => w.id === wordId ? updatedWordWithSentences : w);
-        persistWords(finalWords);
-        toast({
-          title: "Sentences Regenerated!",
-          description: `New example sentences for "${wordToUpdate.japanese}" are ready.`,
-        });
-      } else {
-        toast({
-          title: "Notice",
-          description: `Could not regenerate example sentences for "${wordToUpdate.japanese}".`,
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Failed to regenerate example sentences", error);
-      toast({
-        title: "AI Error",
-        description: `Failed to regenerate example sentences for "${wordToUpdate.japanese}".`,
-        variant: "destructive",
-      });
-    }
-  }, [words, persistWords, toast]);
-
-
-  return { words, loading, addWord, updateWord, toggleLearnedStatus, deleteWord, regenerateSentences };
+  return { words, loading, addWord, updateWord, toggleLearnedStatus, deleteWord }; // Removed regenerateSentences from return
 }

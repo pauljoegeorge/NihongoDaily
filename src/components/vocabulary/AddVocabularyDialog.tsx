@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { PlusCircle, Loader2 } from 'lucide-react';
 import type { VocabularyWord } from '@/types';
 
@@ -23,12 +25,13 @@ const formSchema = z.object({
   japanese: z.string().min(1, 'Japanese word is required.'),
   romaji: z.string().min(1, 'Romaji pronunciation is required.'),
   definition: z.string().min(1, 'Definition is required.'),
+  exampleSentences: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 interface AddVocabularyDialogProps {
-  onAddWord: (wordData: Omit<VocabularyWord, 'id' | 'exampleSentences' | 'learned' | 'createdAt'>) => Promise<VocabularyWord | undefined>;
+  onAddWord: (wordData: Omit<VocabularyWord, 'id' | 'learned' | 'createdAt'>) => Promise<VocabularyWord | undefined>;
 }
 
 export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogProps) {
@@ -41,13 +44,23 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
       japanese: '',
       romaji: '',
       definition: '',
+      exampleSentences: '',
     },
   });
 
   const onSubmit = async (values: FormData) => {
     setIsSubmitting(true);
     try {
-      await onAddWord(values);
+      const exampleSentencesArray = values.exampleSentences
+        ? values.exampleSentences.split('\n').map(s => s.trim()).filter(s => s.length > 0)
+        : [];
+      
+      await onAddWord({
+        japanese: values.japanese,
+        romaji: values.romaji,
+        definition: values.definition,
+        exampleSentences: exampleSentencesArray,
+      });
       form.reset();
       setIsOpen(false);
     } catch (error) {
@@ -70,7 +83,7 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl text-primary">Add New Vocabulary</DialogTitle>
           <DialogDescription>
-            Enter the details for the new Japanese word. Example sentences will be generated automatically.
+            Enter the details for the new Japanese word. You can also add example sentences, each on a new line.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -109,6 +122,15 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
             {form.formState.errors.definition && (
               <p className="text-sm text-destructive mt-1">{form.formState.errors.definition.message}</p>
             )}
+          </div>
+          <div>
+            <Label htmlFor="exampleSentences" className="text-foreground">Example Sentences (one per line)</Label>
+            <Textarea
+              id="exampleSentences"
+              {...form.register('exampleSentences')}
+              className="mt-1 bg-background"
+              rows={3}
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>

@@ -1,30 +1,27 @@
+
 "use client";
 
 import type { VocabularyWord } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+// Removed: import { Checkbox } from '@/components/ui/checkbox'; (not used directly)
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen, Languages, ListChecks, Sparkles, Trash2, CheckCircle2, Circle } from 'lucide-react';
+import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, Circle } from 'lucide-react'; // Removed Sparkles
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '../ui/separator';
-import { useState } from 'react';
+// Removed: import { useState } from 'react';
 
 interface VocabularyCardProps {
   word: VocabularyWord;
   onToggleLearned: (id: string) => void;
   onDelete: (id: string) => void;
-  onRegenerateSentences: (id: string) => Promise<void>;
+  // Removed: onRegenerateSentences: (id: string) => Promise<void>;
 }
 
-export default function VocabularyCard({ word, onToggleLearned, onDelete, onRegenerateSentences }: VocabularyCardProps) {
-  const [isGenerating, setIsGenerating] = useState(false);
+export default function VocabularyCard({ word, onToggleLearned, onDelete }: VocabularyCardProps) {
+  // Removed: const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleRegenerate = async () => {
-    setIsGenerating(true);
-    await onRegenerateSentences(word.id);
-    setIsGenerating(false);
-  };
+  // Removed: handleRegenerate function
   
   return (
     <Card className={`transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl ${word.learned ? 'bg-primary/5 border-primary/30' : 'bg-card'}`}>
@@ -76,18 +73,9 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onRege
                   </p>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground italic">No example sentences available. Try generating them!</p>
+                <p className="text-sm text-muted-foreground italic">No example sentences provided.</p>
               )}
-               <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRegenerate}
-                disabled={isGenerating}
-                className="mt-2 flex items-center gap-1 text-xs"
-              >
-                <Sparkles className={`h-3 w-3 ${isGenerating ? 'animate-spin' : ''}`} />
-                {isGenerating ? 'Generating...' : 'Regenerate Sentences'}
-              </Button>
+               {/* Removed Regenerate Sentences Button */}
             </AccordionContent>
           </AccordionItem>
         </Accordion>
