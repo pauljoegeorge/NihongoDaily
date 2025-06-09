@@ -14,7 +14,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
-  const { words, loading: vocabLoading, addWord, toggleLearnedStatus, deleteWord, updateWordDifficulty } = useVocabulary();
+  const { 
+    words, 
+    loading: vocabLoading, 
+    addWord, 
+    updateWord, // Get updateWord function
+    toggleLearnedStatus, 
+    deleteWord, 
+    updateWordDifficulty 
+  } = useVocabulary();
   const [selectedDifficultyFilter, setSelectedDifficultyFilter] = useState<DifficultyFilter>('all');
   const [isTodayRandomized, setIsTodayRandomized] = useState(false);
 
@@ -102,6 +110,7 @@ export default function Home() {
         toggleLearnedStatus={toggleLearnedStatus}
         deleteWord={deleteWord}
         updateWordDifficulty={updateWordDifficulty}
+        updateWord={updateWord} // Pass updateWord function
         selectedDifficultyFilter={selectedDifficultyFilter}
         isTodayRandomized={isTodayRandomized}
       />

@@ -27,6 +27,20 @@ import {
   getDoc
 } from 'firebase/firestore';
 
+// Define FormData type used by Add/Edit dialogs
+// This should ideally be in types/forms.ts or similar if it grows
+const difficultyLevels = z.enum(['easy', 'medium', 'hard']);
+const formSchema = z.object({
+  japanese: z.string().min(1, 'Japanese word is required.'),
+  romaji: z.string().min(1, 'Reading is required.'),
+  definition: z.string().min(1, 'Definition is required.'),
+  exampleSentences: z.string().optional(),
+  difficulty: difficultyLevels.default('medium'),
+});
+import * as z from 'zod';
+export type VocabularyFormDataType = z.infer<typeof formSchema>;
+
+
 export function useVocabulary() {
   const [words, setWords] = useState<VocabularyWord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,12 +59,11 @@ export function useVocabulary() {
     console.log(`[DIAGNOSTIC] useVocabulary: Setting up Firestore listener for user ID: ${userIdForQuery}`);
     setLoading(true);
     const vocabularyCollectionRef = collection(db, 'vocabulary');
-
-    // Query now orders by createdAt Descending to show newest first
+    
     const q = query(
       vocabularyCollectionRef,
       where('userId', '==', userIdForQuery),
-      orderBy('createdAt', 'desc') // << Back to DESCENDING
+      orderBy('createdAt', 'desc') 
     );
     console.log("[DIAGNOSTIC] useVocabulary: Query constructed for onSnapshot:", q);
 
@@ -88,11 +101,11 @@ export function useVocabulary() {
       let title = "Error Fetching Vocabulary";
       let description = `Could not fetch your vocabulary. Code: ${errorCode}. Message: ${errorMessage}.`;
 
-      if ((errorCode === 'failed-precondition' || errorMessage.toLowerCase().includes('index')) && typeof errorMessage === 'string') {
+      if ((errorCode === 'failed-precondition' || (typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('index')))) {
         title = "Firestore Indexing Error (Listener)";
         let detailedDescription = `A required Firestore index is missing or not yet built for the 'vocabulary' collection. `;
         
-        const createIndexUrlMatch = errorMessage.match(/(https?:\/\/[^\s]*console\.firebase\.google\.com[^\s]*)/);
+        const createIndexUrlMatch = typeof errorMessage === 'string' ? errorMessage.match(/(https?:\/\/[^\s]*console\.firebase\.google\.com[^\s]*)/) : null;
 
         if (createIndexUrlMatch && createIndexUrlMatch[0]) {
           detailedDescription += `Firestore suggests creating it here: ${createIndexUrlMatch[0]} (You may need to copy this URL from your browser's developer console and open it in a new tab). Please ensure your index fields are: userId (Ascending) AND createdAt (Descending).`;
@@ -140,8 +153,6 @@ export function useVocabulary() {
       return undefined;
     }
 
-    console.log(`[DIAGNOSTIC] useVocabulary: Attempting to add word for user ${user.uid}:`, newWordData);
-    const vocabularyCollectionRef = collection(db, 'vocabulary');
     const firestoreDocData: FirestoreVocabularyWord = {
       japanese: newWordData.japanese,
       definition: newWordData.definition,
@@ -154,12 +165,9 @@ export function useVocabulary() {
     };
 
     try {
-      console.log("[DIAGNOSTIC] useVocabulary: Calling addDoc with data:", firestoreDocData);
+      const vocabularyCollectionRef = collection(db, 'vocabulary');
       const docRef = await addDoc(vocabularyCollectionRef, firestoreDocData);
-      console.log("[DIAGNOSTIC] useVocabulary: Word successfully submitted to Firestore, docRef ID:", docRef.id);
-      
-      toast({ title: "Word Submitted", description: `Word "${newWordData.japanese}" submitted. It will appear shortly.` });
-      
+      toast({ title: "Word Added", description: `Word "${newWordData.japanese}" added successfully.` });
       return {
         id: docRef.id,
         ...newWordData,
@@ -171,16 +179,53 @@ export function useVocabulary() {
       console.error("[DIAGNOSTIC] Full Firestore Error object in addWord:", error);
       const errorCode = error.code || 'N/A';
       const errorMessage = error.message || 'No specific message';
-      console.error(`[DIAGNOSTIC] Firestore addWord Error - Code: ${errorCode}, Message: ${errorMessage}`);
-
-      let description = `Could not add word. Code: ${errorCode}. Message: ${errorMessage}.`;
-      if (errorCode === 'permission-denied') {
-        description += ` Check Firestore rules for project '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}'.`;
-      }
-      toast({ title: "Database Error", description, variant: "destructive", duration: 10000 });
+      toast({ title: "Database Error", description: `Could not add word. Code: ${errorCode}. Message: ${errorMessage}.`, variant: "destructive", duration: 10000 });
       return undefined;
     }
   }, [user, toast]);
+
+  const updateWord = useCallback(async (wordId: string, updatedFormData: VocabularyFormDataType) => {
+    if (!user) {
+      toast({ title: "Not Authenticated", description: "You must be signed in to update words.", variant: "destructive" });
+      return;
+    }
+
+    const wordRef = doc(db, 'vocabulary', wordId);
+    try {
+      const docSnap = await getDoc(wordRef);
+      if (!docSnap.exists()) {
+        toast({ title: "Error", description: "Word not found.", variant: "destructive" });
+        return;
+      }
+      if (docSnap.data().userId !== user.uid) {
+        toast({ title: "Permission Denied", description: "You cannot edit this word.", variant: "destructive" });
+        return;
+      }
+
+      const exampleSentencesArray = updatedFormData.exampleSentences
+        ? updatedFormData.exampleSentences.split('\n').map(s => s.trim()).filter(s => s.length > 0)
+        : [];
+
+      const dataToUpdate: Partial<FirestoreVocabularyWord> = {
+        japanese: updatedFormData.japanese,
+        romaji: updatedFormData.romaji,
+        definition: updatedFormData.definition,
+        exampleSentences: exampleSentencesArray,
+        difficulty: updatedFormData.difficulty,
+      };
+
+      await updateDoc(wordRef, dataToUpdate);
+      toast({ title: "Word Updated", description: `Word "${updatedFormData.japanese}" has been updated.` });
+
+    } catch (error: any) {
+      console.error("[DIAGNOSTIC] Full Firestore Error object in updateWord:", error);
+      const errorCode = error.code || 'N/A';
+      const errorMessage = error.message || 'No specific message';
+      console.error(`[DIAGNOSTIC] Firestore updateWord Error - Code: ${errorCode}, Message: ${errorMessage}`);
+      toast({ title: "Database Error", description: `Could not update word. Code: ${errorCode}.`, variant: "destructive" });
+    }
+  }, [user, toast]);
+
 
   const toggleLearnedStatus = useCallback(async (wordId: string) => {
     if (!user) {
@@ -209,7 +254,6 @@ export function useVocabulary() {
       console.error("[DIAGNOSTIC] Full Firestore Error object in toggleLearnedStatus:", error);
       const errorCode = error.code || 'N/A';
       const errorMessage = error.message || 'No specific message';
-      console.error(`[DIAGNOSTIC] Firestore toggleLearnedStatus Error - Code: ${errorCode}, Message: ${errorMessage}`);
       toast({ title: "Error", description: `Could not update learned status. Code: ${errorCode}.`, variant: "destructive" });
     }
   }, [user, toast]);
@@ -234,7 +278,6 @@ export function useVocabulary() {
       console.error("[DIAGNOSTIC] Full Firestore Error object in deleteWord:", error);
       const errorCode = error.code || 'N/A';
       const errorMessage = error.message || 'No specific message';
-      console.error(`[DIAGNOSTIC] Firestore deleteWord Error - Code: ${errorCode}, Message: ${errorMessage}`);
       toast({ title: "Error", description: `Could not delete word. Code: ${errorCode}.`, variant: "destructive" });
     }
   }, [user, toast]);
@@ -260,11 +303,9 @@ export function useVocabulary() {
       console.error("[DIAGNOSTIC] Full Firestore Error object in updateWordDifficulty:", error);
       const errorCode = error.code || 'N/A';
       const errorMessage = error.message || 'No specific message';
-      console.error(`[DIAGNOSTIC] Firestore updateWordDifficulty Error - Code: ${errorCode}, Message: ${errorMessage}`);
       toast({ title: "Error", description: `Could not update difficulty. Code: ${errorCode}.`, variant: "destructive" });
     }
   }, [user, toast]);
   
-  return { words, loading, addWord, toggleLearnedStatus, deleteWord, updateWordDifficulty };
+  return { words, loading, addWord, updateWord, toggleLearnedStatus, deleteWord, updateWordDifficulty };
 }
-

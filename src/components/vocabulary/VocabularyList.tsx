@@ -7,6 +7,7 @@ import { FileText, FilterX } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format, isToday, isYesterday, parseISO, compareDesc } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
+import type { EditFormData } from './EditVocabularyDialog'; // Import EditFormData type
 
 interface VocabularyListProps {
   words: VocabularyWord[];
@@ -14,6 +15,7 @@ interface VocabularyListProps {
   toggleLearnedStatus: (id: string) => void;
   deleteWord: (id: string) => void;
   updateWordDifficulty: (id: string, difficulty: 'easy' | 'medium' | 'hard') => void;
+  updateWord: (id: string, data: EditFormData) => Promise<void>; // Add prop for updating word
   selectedDifficultyFilter: DifficultyFilter;
   isTodayRandomized: boolean;
 }
@@ -23,7 +25,7 @@ interface GroupedWords {
 }
 
 function shuffleArray<T>(array: T[]): T[] {
-  const newArray = [...array]; // Create a copy to avoid mutating the original
+  const newArray = [...array]; 
   for (let i = newArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
@@ -37,6 +39,7 @@ export default function VocabularyList({
   toggleLearnedStatus, 
   deleteWord, 
   updateWordDifficulty,
+  updateWord, // Destructure new prop
   selectedDifficultyFilter,
   isTodayRandomized
 }: VocabularyListProps) {
@@ -149,6 +152,7 @@ export default function VocabularyList({
                   onToggleLearned={toggleLearnedStatus}
                   onDelete={deleteWord}
                   onUpdateDifficulty={updateWordDifficulty}
+                  onUpdateWord={updateWord} // Pass down updateWord function
                 />
               ))}
             </div>
