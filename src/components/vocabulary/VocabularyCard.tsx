@@ -5,7 +5,7 @@ import type { VocabularyWord } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, Circle } from 'lucide-react';
+import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, Circle, MessageSquareText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '../ui/separator';
 
@@ -26,9 +26,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete }: Voca
               {word.japanese}
               {word.learned && <CheckCircle2 className="ml-2 h-6 w-6 text-green-500" />}
             </CardTitle>
-            <p className="text-muted-foreground flex items-center gap-1 mt-1">
-              <Languages className="h-4 w-4" /> {word.romaji}
-            </p>
+            {/* Romaji removed from direct display here */}
           </div>
           <div className="flex items-center space-x-2">
              <Button
@@ -51,8 +49,21 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete }: Voca
         
         <Separator />
 
-        <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
-          <AccordionItem value="item-1">
+        <Accordion type="single" collapsible className="w-full" defaultValue="item-examples">
+          <AccordionItem value="item-reading">
+            <AccordionTrigger className="text-base font-semibold hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Languages className="h-5 w-5 text-accent-foreground" />
+                Reading (Romaji)
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-2 space-y-2">
+              <p className="text-sm text-muted-foreground pl-2 border-l-2 border-accent">
+                {word.romaji}
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="item-examples">
             <AccordionTrigger className="text-base font-semibold hover:no-underline">
               <div className="flex items-center gap-2">
                 <ListChecks className="h-5 w-5 text-accent-foreground" />
