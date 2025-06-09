@@ -1,0 +1,132 @@
+"use client";
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PlusCircle, Loader2 } from 'lucide-react';
+import type { VocabularyWord } from '@/types';
+
+const formSchema = z.object({
+  japanese: z.string().min(1, 'Japanese word is required.'),
+  romaji: z.string().min(1, 'Romaji pronunciation is required.'),
+  definition: z.string().min(1, 'Definition is required.'),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+interface AddVocabularyDialogProps {
+  onAddWord: (wordData: Omit<VocabularyWord, 'id' | 'exampleSentences' | 'learned' | 'createdAt'>) => Promise<VocabularyWord | undefined>;
+}
+
+export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      japanese: '',
+      romaji: '',
+      definition: '',
+    },
+  });
+
+  const onSubmit = async (values: FormData) => {
+    setIsSubmitting(true);
+    try {
+      await onAddWord(values);
+      form.reset();
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error adding word:", error);
+      // Toast for error is handled in useVocabulary hook
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button className="fixed bottom-8 right-8 rounded-full shadow-lg p-4 h-16 w-16  md:h-14 md:w-auto md:px-6 md:py-3">
+          <PlusCircle className="h-8 w-8 md:h-5 md:w-5 md:mr-2" />
+          <span className="hidden md:inline">Add Word</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px] bg-card">
+        <DialogHeader>
+          <DialogTitle className="font-headline text-2xl text-primary">Add New Vocabulary</DialogTitle>
+          <DialogDescription>
+            Enter the details for the new Japanese word. Example sentences will be generated automatically.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <div>
+            <Label htmlFor="japanese" className="text-foreground">Japanese Word</Label>
+            <Input
+              id="japanese"
+              {...form.register('japanese')}
+              className="mt-1 bg-background"
+              aria-invalid={form.formState.errors.japanese ? "true" : "false"}
+            />
+            {form.formState.errors.japanese && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.japanese.message}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="romaji" className="text-foreground">Romaji (Pronunciation)</Label>
+            <Input
+              id="romaji"
+              {...form.register('romaji')}
+              className="mt-1 bg-background"
+              aria-invalid={form.formState.errors.romaji ? "true" : "false"}
+            />
+            {form.formState.errors.romaji && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.romaji.message}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="definition" className="text-foreground">Definition (English)</Label>
+            <Input
+              id="definition"
+              {...form.register('definition')}
+              className="mt-1 bg-background"
+              aria-invalid={form.formState.errors.definition ? "true" : "false"}
+            />
+            {form.formState.errors.definition && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.definition.message}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                'Add Word'
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
