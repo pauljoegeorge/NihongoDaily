@@ -4,24 +4,18 @@
 import type { VocabularyWord } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-// Removed: import { Checkbox } from '@/components/ui/checkbox'; (not used directly)
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, Circle } from 'lucide-react'; // Removed Sparkles
+import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, Circle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '../ui/separator';
-// Removed: import { useState } from 'react';
 
 interface VocabularyCardProps {
   word: VocabularyWord;
   onToggleLearned: (id: string) => void;
   onDelete: (id: string) => void;
-  // Removed: onRegenerateSentences: (id: string) => Promise<void>;
 }
 
 export default function VocabularyCard({ word, onToggleLearned, onDelete }: VocabularyCardProps) {
-  // Removed: const [isGenerating, setIsGenerating] = useState(false);
-
-  // Removed: handleRegenerate function
   
   return (
     <Card className={`transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl ${word.learned ? 'bg-primary/5 border-primary/30' : 'bg-card'}`}>
@@ -57,7 +51,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete }: Voca
         
         <Separator />
 
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-base font-semibold hover:no-underline">
               <div className="flex items-center gap-2">
@@ -75,7 +69,6 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete }: Voca
               ) : (
                 <p className="text-sm text-muted-foreground italic">No example sentences provided.</p>
               )}
-               {/* Removed Regenerate Sentences Button */}
             </AccordionContent>
           </AccordionItem>
         </Accordion>
