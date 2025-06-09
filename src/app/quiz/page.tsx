@@ -176,17 +176,16 @@ export default function QuizPage() {
       <p className="text-center text-muted-foreground">
         Word {currentWordIndex + 1} of {quizWords.length}
       </p>
-      <Card className="w-full max-w-lg min-h-[320px] shadow-2xl bg-card relative overflow-hidden transition-all duration-500 ease-in-out transform-style-preserve-3d">
-        {/* Flipper Div: Removed flex properties, kept transform styles */}
+      <Card className="w-full max-w-lg min-h-[420px] shadow-2xl bg-card relative overflow-hidden transition-all duration-500 ease-in-out transform-style-preserve-3d">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
-          {/* Front of Card: flex, flex-col, items-center, justify-center, text-center are here */}
-          <div className={`absolute w-full h-full flex flex-col items-center justify-center backface-hidden p-4 text-center ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          {/* Front of Card: Removed justify-center */}
+          <div className={`absolute w-full h-full flex flex-col items-center backface-hidden p-4 text-center ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <p className="font-headline text-5xl text-primary mb-4 break-words max-w-full">{currentWord.japanese}</p>
             <Button variant="outline" onClick={handleFlipCard}>Flip Card</Button>
           </div>
 
-          {/* Back of Card: flex, flex-col, items-center, justify-center, text-center are here */}
-          <div className={`absolute w-full h-full flex flex-col items-center justify-center space-y-3 backface-hidden rotate-y-180 p-4 text-center ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          {/* Back of Card: Removed justify-center */}
+          <div className={`absolute w-full h-full flex flex-col items-center space-y-3 backface-hidden rotate-y-180 p-4 text-center ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <p className="text-2xl text-foreground font-semibold">{currentWord.romaji}</p>
             <p className="text-lg text-muted-foreground">{currentWord.definition}</p>
             <Button variant="outline" onClick={handleFlipCard} className="mt-4">Flip Back</Button>
@@ -226,3 +225,4 @@ export default function QuizPage() {
     </div>
   );
 }
+
