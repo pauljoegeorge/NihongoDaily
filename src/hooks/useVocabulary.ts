@@ -22,7 +22,7 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy, // Keep orderBy for potential re-add, but don't use it in the q variable for now
+  orderBy, 
   onSnapshot,
   getDoc
 } from 'firebase/firestore';
@@ -46,14 +46,13 @@ export function useVocabulary() {
     setLoading(true);
     const vocabularyCollectionRef = collection(db, 'vocabulary');
     
-    // TEMPORARY DIAGNOSTIC: Query without orderBy
     const q = query(
       vocabularyCollectionRef,
-      where('userId', '==', userIdForQuery)
-      // Temporarily removed: orderBy('createdAt', 'desc') 
+      where('userId', '==', userIdForQuery),
+      orderBy('createdAt', 'desc') // Restored orderBy clause
     );
 
-    console.log("[DIAGNOSTIC] useVocabulary: Query constructed for onSnapshot (TEMPORARILY SIMPLIFIED):", q);
+    console.log("[DIAGNOSTIC] useVocabulary: Query constructed for onSnapshot:", q);
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedWords: VocabularyWord[] = [];
@@ -78,7 +77,7 @@ export function useVocabulary() {
       });
       setWords(fetchedWords);
       setLoading(false);
-      console.log(`[DIAGNOSTIC] useVocabulary: Fetched ${fetchedWords.length} words for user ${userIdForQuery} from Firestore via onSnapshot (using SIMPLIFIED query).`);
+      console.log(`[DIAGNOSTIC] useVocabulary: Fetched ${fetchedWords.length} words for user ${userIdForQuery} from Firestore via onSnapshot.`);
     }, (error: any) => {
       console.error("[DIAGNOSTIC] Full Firestore Error object in onSnapshot listener:", error);
       const errorCode = error.code || 'N/A';
@@ -89,23 +88,25 @@ export function useVocabulary() {
       let title = "Error Fetching Vocabulary";
       let description = `Could not fetch your vocabulary. Code: ${errorCode}. Message: ${errorMessage}.`;
 
-      if (errorCode === 'failed-precondition' || errorMessage.toLowerCase().includes('index')) {
-        title = "Indexing Error (from onSnapshot)";
-        description = "A required Firestore index is missing, not yet built, or incorrect for the onSnapshot listener. Please check the Firebase console (Firestore > Indexes). The query likely requires an index on 'vocabulary' collection: userId (Ascending), createdAt (Descending). Ensure it's for the correct project ID and fully built.";
+      if (errorCode === 'failed-precondition' || errorMessage.toLowerCase().includes('index') || errorMessage.toLowerCase().includes('requires an index')) {
+        title = "Firestore Indexing Error (Listener)";
+        description = "A required Firestore index for the vocabulary listener is missing, not yet built, or incorrect. Please go to your Firebase Console (Firestore > Indexes) for project 'nihongo-daily-6s2a3' and ensure you have a composite index for the 'vocabulary' collection with fields: 'userId' (Ascending) AND 'createdAt' (Descending). Ensure it's fully built. The error was: " + errorMessage;
       } else if (errorCode === 'permission-denied' || errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')) {
-        title = "Permission Denied (from onSnapshot)";
-        description = "You don't have permission to read vocabulary. Check Firestore rules.";
+        title = "Permission Denied (Listener)";
+        description = "You don't have permission to read vocabulary. Check Firestore rules for project 'nihongo-daily-6s2a3'.";
       } else if (error.name === 'FirebaseError' && error.code === 'cancelled') {
-        // This can happen if the component unmounts or query changes quickly. Usually benign.
         console.warn("[DIAGNOSTIC] Firestore onSnapshot listener was cancelled. This is often normal during component unmount or query changes.");
-        return; // Don't toast for cancellations
+        return; 
+      } else if (error.name === 'FirebaseError' && error.code === 'unimplemented') {
+        title = "Operation Not Supported (Listener)";
+        description = "The query operation is not supported. This can sometimes happen with complex queries or if there's a data type mismatch in 'createdAt' fields. " + errorMessage;
       }
       
       toast({
         title: title,
         description: description,
         variant: "destructive",
-        duration: 15000, 
+        duration: 20000, 
       });
     });
 
@@ -141,16 +142,13 @@ export function useVocabulary() {
       
       toast({ title: "Success!", description: `Word "${newWordData.japanese}" submitted. It will appear shortly.` });
       
-      // Return a client-side representation; onSnapshot will provide the server-confirmed data
+      // The onSnapshot listener will handle updating the UI with the server-confirmed data.
+      // We return a temporary client-side representation immediately if needed, but the source of truth is Firestore via onSnapshot.
       return {
-        id: docRef.id,
-        japanese: newWordData.japanese,
-        definition: newWordData.definition,
-        romaji: newWordData.romaji,
-        exampleSentences: newWordData.exampleSentences || [],
+        id: docRef.id, 
+        ...newWordData,
         learned: false,
-        createdAt: Date.now(), // Temporary, will be updated by onSnapshot
-        difficulty: newWordData.difficulty || 'medium'
+        createdAt: Date.now(), // This is a temporary client-side timestamp
       } as VocabularyWord;
 
     } catch (error: any) {
@@ -161,7 +159,7 @@ export function useVocabulary() {
 
       let description = `Could not add word. Code: ${errorCode}. Message: ${errorMessage}.`;
       if (errorCode === 'permission-denied') {
-        description += " Check Firestore rules.";
+        description += " Check Firestore rules for project 'nihongo-daily-6s2a3'.";
       }
       toast({ title: "Database Error", description, variant: "destructive", duration: 10000 });
       return undefined;
@@ -210,7 +208,8 @@ export function useVocabulary() {
       }
       await deleteDoc(wordRef);
       toast({ title: "Word Deleted", description: `"${wordJapanese}" has been removed from your database.` });
-    } catch (error: any) {
+    } catch (error: any)
+    {
       console.error("[DIAGNOSTIC] Full Firestore Error object in deleteWord:", error);
       const errorCode = error.code || 'N/A';
       const errorMessage = error.message || 'No specific message';
@@ -243,4 +242,6 @@ export function useVocabulary() {
   
   return { words, loading, addWord, toggleLearnedStatus, deleteWord, updateWordDifficulty };
 }
+    
+
     
