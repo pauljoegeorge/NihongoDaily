@@ -13,13 +13,14 @@ interface VocabularyListProps {
   loading: boolean;
   toggleLearnedStatus: (id: string) => void;
   deleteWord: (id: string) => void;
+  updateWordDifficulty: (id: string, difficulty: 'easy' | 'medium' | 'hard') => void;
 }
 
 interface GroupedWords {
   [key: string]: VocabularyWord[];
 }
 
-export default function VocabularyList({ words, loading, toggleLearnedStatus, deleteWord }: VocabularyListProps) {
+export default function VocabularyList({ words, loading, toggleLearnedStatus, deleteWord, updateWordDifficulty }: VocabularyListProps) {
   if (loading) {
     return (
       <div className="space-y-8">
@@ -106,6 +107,7 @@ export default function VocabularyList({ words, loading, toggleLearnedStatus, de
                 word={word} 
                 onToggleLearned={toggleLearnedStatus}
                 onDelete={deleteWord}
+                onUpdateDifficulty={updateWordDifficulty}
               />
             ))}
           </div>
@@ -115,3 +117,4 @@ export default function VocabularyList({ words, loading, toggleLearnedStatus, de
     </div>
   );
 }
+

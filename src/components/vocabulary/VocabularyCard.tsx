@@ -5,17 +5,37 @@ import type { VocabularyWord } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, Circle, MessageSquareText } from 'lucide-react';
+import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, Circle, BarChart3, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '../ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface VocabularyCardProps {
   word: VocabularyWord;
   onToggleLearned: (id: string) => void;
   onDelete: (id: string) => void;
+  onUpdateDifficulty: (id: string, difficulty: 'easy' | 'medium' | 'hard') => void;
 }
 
-export default function VocabularyCard({ word, onToggleLearned, onDelete }: VocabularyCardProps) {
+export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpdateDifficulty }: VocabularyCardProps) {
+  
+  const getDifficultyBadgeVariant = (difficulty: 'easy' | 'medium' | 'hard' | undefined) => {
+    switch (difficulty) {
+      case 'easy':
+        return 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200';
+      case 'hard':
+        return 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200';
+      default:
+        return 'outline';
+    }
+  };
   
   return (
     <Card className={`transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl ${word.learned ? 'bg-primary/5 border-primary/30' : 'bg-card'}`}>
@@ -28,6 +48,26 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete }: Voca
             </CardTitle>
           </div>
           <div className="flex items-center space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className={`capitalize text-xs px-2 py-1 h-auto ${getDifficultyBadgeVariant(word.difficulty)}`}>
+                  <BarChart3 className="h-3 w-3 mr-1" />
+                  {word.difficulty || 'Set Difficulty'}
+                  <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onUpdateDifficulty(word.id, 'easy')}>
+                  Easy
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onUpdateDifficulty(word.id, 'medium')}>
+                  Medium
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onUpdateDifficulty(word.id, 'hard')}>
+                  Hard
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
              <Button
               variant={word.learned ? "secondary" : "outline"}
               size="sm"
@@ -94,3 +134,4 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete }: Voca
     </Card>
   );
 }
+

@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { VocabularyWord } from '@/types';
-// Removed: import { generateExampleSentences } from '@/ai/flows/generate-example-sentences';
 import { useToast } from "@/hooks/use-toast";
 
 const VOCABULARY_KEY = 'nihongoDailyVocabulary';
@@ -17,7 +16,13 @@ export function useVocabulary() {
     try {
       const storedWords = localStorage.getItem(VOCABULARY_KEY);
       if (storedWords) {
-        setWords(JSON.parse(storedWords));
+        const parsedWords: VocabularyWord[] = JSON.parse(storedWords);
+        // Add default difficulty to words that don't have it
+        const wordsWithDifficulty = parsedWords.map(word => ({
+          ...word,
+          difficulty: word.difficulty || 'medium', 
+        }));
+        setWords(wordsWithDifficulty);
       }
     } catch (error) {
       console.error("Failed to load words from localStorage", error);
@@ -46,10 +51,11 @@ export function useVocabulary() {
 
   const addWord = useCallback(async (newWordData: Omit<VocabularyWord, 'id' | 'learned' | 'createdAt'>) => {
     const newWord: VocabularyWord = {
-      ...newWordData, // newWordData now includes exampleSentences directly
+      ...newWordData,
       id: Date.now().toString(),
       learned: false,
       createdAt: Date.now(),
+      difficulty: newWordData.difficulty || 'medium', // Ensure difficulty is set
     };
 
     const updatedWords = [newWord, ...words];
@@ -59,7 +65,6 @@ export function useVocabulary() {
       description: `Word "${newWord.japanese}" added.`,
     });
     
-    // Removed AI sentence generation logic
     return newWord;
   }, [words, persistWords, toast]);
 
@@ -93,8 +98,22 @@ export function useVocabulary() {
       });
     }
   }, [words, persistWords, toast]);
-  
-  // Removed regenerateSentences function
 
-  return { words, loading, addWord, updateWord, toggleLearnedStatus, deleteWord }; // Removed regenerateSentences from return
+  const updateWordDifficulty = useCallback((wordId: string, difficulty: 'easy' | 'medium' | 'hard') => {
+    const updatedWords = words.map(word =>
+      word.id === wordId ? { ...word, difficulty } : word
+    );
+    persistWords(updatedWords);
+    const updatedWord = updatedWords.find(w => w.id === wordId);
+    if (updatedWord) {
+      toast({
+        title: "Difficulty Updated",
+        description: `"${updatedWord.japanese}" marked as ${difficulty}.`,
+      });
+    }
+  }, [words, persistWords, toast]);
+  
+
+  return { words, loading, addWord, updateWord, toggleLearnedStatus, deleteWord, updateWordDifficulty };
 }
+

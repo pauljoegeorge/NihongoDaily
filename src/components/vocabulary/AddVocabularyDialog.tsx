@@ -20,12 +20,24 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { PlusCircle, Loader2 } from 'lucide-react';
 import type { VocabularyWord } from '@/types';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"; // Imported Form components
+
+
+const difficultyLevels = z.enum(['easy', 'medium', 'hard']);
 
 const formSchema = z.object({
   japanese: z.string().min(1, 'Japanese word is required.'),
-  romaji: z.string().min(1, 'Reading is required.'),
+  romaji: z.string().min(1, 'Reading is required.'), // This stores Hiragana
   definition: z.string().min(1, 'Definition is required.'),
   exampleSentences: z.string().optional(),
+  difficulty: difficultyLevels.default('medium'),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -45,6 +57,7 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
       romaji: '',
       definition: '',
       exampleSentences: '',
+      difficulty: 'medium',
     },
   });
 
@@ -60,6 +73,7 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
         romaji: values.romaji,
         definition: values.definition,
         exampleSentences: exampleSentencesArray,
+        difficulty: values.difficulty,
       });
       form.reset();
       setIsOpen(false);
@@ -132,6 +146,44 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
               rows={3}
             />
           </div>
+          
+          <FormField
+            control={form.control}
+            name="difficulty"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel className="text-foreground">Difficulty</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex space-x-4"
+                  >
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="easy" />
+                      </FormControl>
+                      <FormLabel className="font-normal text-foreground">Easy</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="medium" />
+                      </FormControl>
+                      <FormLabel className="font-normal text-foreground">Medium</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="hard" />
+                      </FormControl>
+                      <FormLabel className="font-normal text-foreground">Hard</FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
               Cancel
@@ -152,3 +204,4 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
     </Dialog>
   );
 }
+
