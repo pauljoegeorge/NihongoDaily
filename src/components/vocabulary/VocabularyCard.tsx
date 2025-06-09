@@ -26,7 +26,6 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete }: Voca
               {word.japanese}
               {word.learned && <CheckCircle2 className="ml-2 h-6 w-6 text-green-500" />}
             </CardTitle>
-            {/* Romaji removed from direct display here */}
           </div>
           <div className="flex items-center space-x-2">
              <Button
@@ -54,7 +53,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete }: Voca
             <AccordionTrigger className="text-base font-semibold hover:no-underline">
               <div className="flex items-center gap-2">
                 <Languages className="h-5 w-5 text-accent-foreground" />
-                Reading (Romaji)
+                Reading (Hiragana)
               </div>
             </AccordionTrigger>
             <AccordionContent className="pt-2 space-y-2">
