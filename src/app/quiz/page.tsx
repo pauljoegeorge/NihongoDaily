@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -9,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ArrowRightCircle, CheckCircle, HelpCircle, Loader2, RefreshCcw, Smile, XCircle } from 'lucide-react';
 import Link from 'next/link';
+
+const MAX_QUIZ_WORDS = 10;
 
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
@@ -41,7 +44,9 @@ export default function QuizPage() {
 
   const startQuiz = useCallback(() => {
     if (learnedWords.length > 0) {
-      setQuizWords(shuffleArray([...learnedWords]));
+      const shuffledLearnedWords = shuffleArray([...learnedWords]);
+      const selectedQuizWords = shuffledLearnedWords.slice(0, MAX_QUIZ_WORDS);
+      setQuizWords(selectedQuizWords);
       setCurrentWordIndex(0);
       setIsFlipped(false);
       setQuizComplete(false);
@@ -118,6 +123,7 @@ export default function QuizPage() {
         </div>
       );
     }
+    const numWordsForQuiz = Math.min(learnedWords.length, MAX_QUIZ_WORDS);
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Card className="w-full max-w-md text-center p-8 shadow-xl bg-card">
@@ -126,7 +132,8 @@ export default function QuizPage() {
           </CardHeader>
           <CardContent>
             <p className="text-lg text-foreground mb-6">
-              You have <strong className="text-primary">{learnedWords.length}</strong> learned word{learnedWords.length === 1 ? '' : 's'}. Let's test your knowledge!
+              You have <strong className="text-primary">{learnedWords.length}</strong> learned word{learnedWords.length === 1 ? '' : 's'}. 
+              This quiz will test you on <strong className="text-primary">{numWordsForQuiz}</strong> of them.
             </p>
           </CardContent>
           <CardFooter className="flex justify-center">
@@ -228,3 +235,4 @@ export default function QuizPage() {
     </div>
   );
 }
+
