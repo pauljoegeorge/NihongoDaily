@@ -3,9 +3,10 @@
 
 import type { VocabularyWord } from '@/types';
 import VocabularyCard from './VocabularyCard';
-// import { useVocabulary } from '@/hooks/useVocabulary'; // Removed hook call from here
 import { FileText } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { format, isToday, isYesterday, parseISO, compareDesc } from 'date-fns';
+import { Separator } from '@/components/ui/separator';
 
 interface VocabularyListProps {
   words: VocabularyWord[];
@@ -14,19 +15,28 @@ interface VocabularyListProps {
   deleteWord: (id: string) => void;
 }
 
-export default function VocabularyList({ words, loading, toggleLearnedStatus, deleteWord }: VocabularyListProps) {
-  // const { words, loading, toggleLearnedStatus, deleteWord } = useVocabulary(); // Instance of hook removed
+interface GroupedWords {
+  [key: string]: VocabularyWord[];
+}
 
+export default function VocabularyList({ words, loading, toggleLearnedStatus, deleteWord }: VocabularyListProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-card p-6 rounded-lg shadow-md animate-pulse">
-            <div className="h-8 bg-muted rounded w-3/4 mb-2"></div>
-            <div className="h-4 bg-muted rounded w-1/2 mb-4"></div>
-            <div className="h-4 bg-muted rounded w-full mb-2"></div>
-            <div className="h-4 bg-muted rounded w-full mb-2"></div>
-            <div className="h-10 bg-muted rounded w-1/4 mt-4"></div>
+      <div className="space-y-8">
+        {[...Array(2)].map((_, groupIndex) => (
+          <div key={groupIndex}>
+            <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, cardIndex) => (
+                <div key={cardIndex} className="bg-card p-6 rounded-lg shadow-md animate-pulse">
+                  <div className="h-8 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-1/2 mb-4"></div>
+                  <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                  <div className="h-10 bg-muted rounded w-1/4 mt-4"></div>
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -45,21 +55,63 @@ export default function VocabularyList({ words, loading, toggleLearnedStatus, de
     );
   }
   
-  const sortedWords = [...words].sort((a, b) => b.createdAt - a.createdAt);
+  const sortedWords = [...words].sort((a, b) => compareDesc(new Date(a.createdAt), new Date(b.createdAt)));
+
+  const groupedWords = sortedWords.reduce((acc: GroupedWords, word) => {
+    const date = new Date(word.createdAt);
+    let dateKey: string;
+
+    if (isToday(date)) {
+      dateKey = 'Today';
+    } else if (isYesterday(date)) {
+      dateKey = 'Yesterday';
+    } else {
+      dateKey = format(date, 'yyyy-MM-dd');
+    }
+
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(word);
+    return acc;
+  }, {});
+
+  const dateKeys = Object.keys(groupedWords).sort((a, b) => {
+    if (a === 'Today') return -1;
+    if (b === 'Today') return 1;
+    if (a === 'Yesterday') return -1;
+    if (b === 'Yesterday') return 1;
+    // For date strings 'YYYY-MM-DD', sort them in reverse chronological order
+    return compareDesc(parseISO(a), parseISO(b));
+  });
+
+  const formatDateDisplay = (dateKey: string): string => {
+    if (dateKey === 'Today' || dateKey === 'Yesterday') {
+      return dateKey;
+    }
+    return format(parseISO(dateKey), 'MMMM d, yyyy');
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {sortedWords.map(word => (
-          <VocabularyCard 
-            key={word.id} 
-            word={word} 
-            onToggleLearned={toggleLearnedStatus}
-            onDelete={deleteWord}
-          />
-        ))}
-      </div>
+    <div className="space-y-8">
+      {dateKeys.map((dateKey, index) => (
+        <section key={dateKey}>
+          <h2 className="text-2xl font-headline text-primary mb-4 pb-2 border-b border-primary/20">
+            {formatDateDisplay(dateKey)}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {groupedWords[dateKey].map(word => (
+              <VocabularyCard 
+                key={word.id} 
+                word={word} 
+                onToggleLearned={toggleLearnedStatus}
+                onDelete={deleteWord}
+              />
+            ))}
+          </div>
+          {index < dateKeys.length - 1 && <Separator className="my-8 bg-border/50" />}
+        </section>
+      ))}
     </div>
   );
 }
-
