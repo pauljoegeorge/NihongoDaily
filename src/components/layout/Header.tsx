@@ -1,7 +1,8 @@
 
 import { Cherry } from 'lucide-react';
 import Link from 'next/link';
-import SignInButton from '@/components/auth/SignInButton'; // Added SignInButton import
+import SignInButton from '@/components/auth/SignInButton';
+import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher'; // Import ThemeSwitcher
 
 export default function Header() {
   return (
@@ -13,7 +14,10 @@ export default function Header() {
             Nihongo Daily
           </h1>
         </Link>
-        <SignInButton /> {/* Added SignInButton component */}
+        <div className="flex items-center gap-2">
+          <ThemeSwitcher /> {/* Add ThemeSwitcher component */}
+          <SignInButton />
+        </div>
       </div>
     </header>
   );
