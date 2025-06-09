@@ -7,10 +7,11 @@ import VocabularyList from '@/components/vocabulary/VocabularyList';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { Button } from '@/components/ui/button';
 import type { DifficultyFilter, VocabularyWord } from '@/types';
-import { ListFilter, Check, Shuffle, LogIn, Loader2, Info } from 'lucide-react';
+import { ListFilter, Check, Shuffle, LogIn, Loader2, Info, Search } from 'lucide-react'; // Added Search icon
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input'; // Added Input import
 
 type LearnedStatusFilter = 'all' | 'learned' | 'unlearned';
 
@@ -26,6 +27,7 @@ export default function Home() {
     updateWordDifficulty
   } = useVocabulary();
 
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficultyFilter, setSelectedDifficultyFilter] = useState<DifficultyFilter>('all');
   const [selectedLearnedFilter, setSelectedLearnedFilter] = useState<LearnedStatusFilter>('all');
   const [isTodayRandomized, setIsTodayRandomized] = useState(false);
@@ -47,6 +49,7 @@ export default function Home() {
     return (
       <div className="space-y-8">
         <div className="mb-6 p-4 bg-card shadow rounded-lg space-y-4">
+          <Skeleton className="h-9 w-full mb-2" />
           <div className="flex flex-wrap items-center gap-2">
             <Skeleton className="h-6 w-40" />
             <Skeleton className="h-9 w-20" />
@@ -95,10 +98,21 @@ export default function Home() {
   // Apply filters
   let processedWords = [...words];
 
+  // 1. Filter by search term
+  if (searchTerm.trim()) {
+    processedWords = processedWords.filter(word =>
+      word.japanese.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      word.romaji.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      word.definition.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  // 2. Filter by difficulty
   if (selectedDifficultyFilter !== 'all') {
     processedWords = processedWords.filter(word => word.difficulty === selectedDifficultyFilter);
   }
 
+  // 3. Filter by learned status
   if (selectedLearnedFilter === 'learned') {
     processedWords = processedWords.filter(word => word.learned);
   } else if (selectedLearnedFilter === 'unlearned') {
@@ -107,11 +121,25 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <div className="mb-6 p-4 bg-card shadow rounded-lg space-y-4">
+      <div className="mb-6 p-4 bg-card shadow rounded-lg space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+           <div className="flex items-center gap-2 text-sm font-medium text-foreground shrink-0">
+            <Search className="h-5 w-5 text-primary" />
+            Search:
+          </div>
+          <Input
+            type="text"
+            placeholder="Search Japanese, Romaji, or Definition..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full sm:max-w-md bg-background"
+          />
+        </div>
+        
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2 text-sm font-medium text-foreground mr-2">
             <ListFilter className="h-5 w-5 text-primary" />
-            Filter by Difficulty:
+            Difficulty:
           </div>
           {difficultyFilters.map((filter) => (
             <Button
@@ -130,7 +158,7 @@ export default function Home() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2 text-sm font-medium text-foreground mr-2">
             <ListFilter className="h-5 w-5 text-primary" />
-            Filter by Status:
+            Status:
           </div>
           {learnedStatusFilters.map((filter) => (
             <Button
@@ -180,19 +208,19 @@ export default function Home() {
         <Alert className="max-w-md mx-auto bg-accent/10 border-accent/30">
           <Info className="h-5 w-5 text-accent-foreground" />
           <AlertTitle className="font-headline text-xl text-accent-foreground">
-            {words.length === 0 ? "Your Vocabulary List is Empty" : "No Words Match Filters"}
+            {words.length === 0 ? "Your Vocabulary List is Empty" : "No Words Match Criteria"}
           </AlertTitle>
           <AlertDescription className="text-muted-foreground">
             {words.length === 0 
               ? "Start your Japanese learning journey by adding your first vocabulary word. Click the 'Add Word' button to begin!"
-              : "Try adjusting your filters or add more words to your list."
+              : "No words match your current search and/or filter criteria. Try adjusting them or add more words to your list."
             }
           </AlertDescription>
         </Alert>
       ) : (
         <VocabularyList
           words={processedWords}
-          loading={vocabLoading} // vocabLoading is still relevant for initial load state
+          loading={vocabLoading} 
           toggleLearnedStatus={toggleLearnedStatus}
           deleteWord={deleteWord}
           updateWordDifficulty={updateWordDifficulty}
