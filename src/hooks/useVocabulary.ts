@@ -70,17 +70,21 @@ export function useVocabulary() {
       setWords(fetchedWords);
       setLoading(false);
       console.log(`useVocabulary: Fetched ${fetchedWords.length} words from Firestore via onSnapshot.`);
-    }, (error) => {
-      console.error("Detailed Firestore Error in onSnapshot:", error);
+    }, (error: any) => { // Changed to 'any' to access potential Firebase error properties
+      console.error("[DIAGNOSTIC] Detailed Firestore Error in onSnapshot listener:", error);
       setLoading(false);
       let description = "Could not fetch your vocabulary. Check console for details.";
       let title = "Error Fetching Vocabulary";
 
+      // Try to get more specific error details from Firebase
       if (error.code) {
         description = `Could not fetch vocabulary: ${error.message} (Code: ${error.code})`;
         if (error.code === 'permission-denied' || error.message.includes('permission-denied') || error.message.includes('Missing or insufficient permissions')) {
           title = "Permission Denied";
           description = "You don't have permission to read vocabulary. Check Firestore rules.";
+        } else if (error.code === 'failed-precondition' && error.message.toLowerCase().includes('index')) {
+          title = "Indexing Error";
+          description = "A required Firestore index is missing or not yet built. Please check the Firebase console (Firestore > Indexes) for a prompt to create it, or create it manually. The query requires an index on 'vocabulary' collection: userId (Ascending), createdAt (Descending).";
         }
       } else if (error.message) {
         description = `An unexpected error occurred: ${error.message}`;
@@ -123,12 +127,8 @@ export function useVocabulary() {
       const docRef = await addDoc(vocabularyCollectionRef, firestoreDocData);
       console.log("[DIAGNOSTIC] useVocabulary: addDoc successful, docRef ID:", docRef.id);
       
-      // For faster UI response, we'll rely on onSnapshot to provide the full data with server timestamp.
-      // We show a success toast immediately.
       toast({ title: "Success!", description: `Word "${newWordData.japanese}" submitted to the database. It will appear shortly.` });
       
-      // Return a temporary representation or just an indication of success.
-      // The actual full object with server timestamp will come from the onSnapshot listener.
       return { 
         id: docRef.id, 
         japanese: newWordData.japanese,
@@ -136,7 +136,7 @@ export function useVocabulary() {
         romaji: newWordData.romaji,
         exampleSentences: newWordData.exampleSentences || [],
         learned: false, 
-        createdAt: Date.now(), // Temporary client timestamp
+        createdAt: Date.now(), // Temporary client timestamp, will be updated by onSnapshot
         difficulty: newWordData.difficulty || 'medium'
       } as VocabularyWord;
 
