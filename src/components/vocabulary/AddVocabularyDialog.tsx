@@ -23,7 +23,7 @@ import type { VocabularyWord } from '@/types';
 
 const formSchema = z.object({
   japanese: z.string().min(1, 'Japanese word is required.'),
-  romaji: z.string().min(1, 'Romaji pronunciation is required.'),
+  romaji: z.string().min(1, 'Reading is required.'),
   definition: z.string().min(1, 'Definition is required.'),
   exampleSentences: z.string().optional(),
 });
@@ -100,7 +100,7 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
             )}
           </div>
           <div>
-            <Label htmlFor="romaji" className="text-foreground">Romaji (Pronunciation)</Label>
+            <Label htmlFor="romaji" className="text-foreground">Reading</Label>
             <Input
               id="romaji"
               {...form.register('romaji')}
