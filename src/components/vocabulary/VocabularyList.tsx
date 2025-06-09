@@ -1,22 +1,23 @@
 
 "use client";
 
-import type { VocabularyWord, DifficultyFilter } from '@/types';
+import type { VocabularyWord } from '@/types';
 import VocabularyCard from './VocabularyCard';
-import { FileText, FilterX } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+// Removed FileText, FilterX from lucide-react as alerts are handled in page.tsx
+// Removed Alert, AlertDescription, AlertTitle
 import { format, isToday, isYesterday, parseISO, compareDesc } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
-import type { EditFormData } from './EditVocabularyDialog'; // Import EditFormData type
+import type { EditFormData } from './EditVocabularyDialog'; 
+import { Skeleton } from '@/components/ui/skeleton'; // Keep Skeleton for loading state
 
 interface VocabularyListProps {
   words: VocabularyWord[];
-  loading: boolean;
+  loading: boolean; // Keep loading prop for initial skeleton display
   toggleLearnedStatus: (id: string) => void;
   deleteWord: (id: string) => void;
   updateWordDifficulty: (id: string, difficulty: 'easy' | 'medium' | 'hard') => void;
-  updateWord: (id: string, data: EditFormData) => Promise<void>; // Add prop for updating word
-  selectedDifficultyFilter: DifficultyFilter;
+  updateWord: (id: string, data: EditFormData) => Promise<void>;
+  // selectedDifficultyFilter: DifficultyFilter; // Removed, filtering done in page.tsx
   isTodayRandomized: boolean;
 }
 
@@ -39,25 +40,26 @@ export default function VocabularyList({
   toggleLearnedStatus, 
   deleteWord, 
   updateWordDifficulty,
-  updateWord, // Destructure new prop
-  selectedDifficultyFilter,
+  updateWord,
   isTodayRandomized
 }: VocabularyListProps) {
 
-  if (loading) {
+  // Loading state is now primarily handled by page.tsx for the empty/filtered states.
+  // This component will show skeletons if `loading` is true (initial load of `useVocabulary`).
+  if (loading && words.length === 0) { // Show skeletons only if truly loading and no words yet
     return (
       <div className="space-y-8">
         {[...Array(2)].map((_, groupIndex) => (
           <div key={groupIndex}>
-            <div className="h-8 bg-muted rounded w-1/4 mb-4 animate-pulse"></div>
+            <Skeleton className="h-8 bg-muted rounded w-1/4 mb-4 animate-pulse" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(3)].map((_, cardIndex) => (
                 <div key={cardIndex} className="bg-card p-6 rounded-lg shadow-md animate-pulse">
-                  <div className="h-8 bg-muted rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-muted rounded w-1/2 mb-4"></div>
-                  <div className="h-4 bg-muted rounded w-full mb-2"></div>
-                  <div className="h-4 bg-muted rounded w-full mb-2"></div>
-                  <div className="h-10 bg-muted rounded w-1/4 mt-4"></div>
+                  <Skeleton className="h-8 bg-muted rounded w-3/4 mb-2" />
+                  <Skeleton className="h-4 bg-muted rounded w-1/2 mb-4" />
+                  <Skeleton className="h-4 bg-muted rounded w-full mb-2" />
+                  <Skeleton className="h-4 bg-muted rounded w-full mb-2" />
+                  <Skeleton className="h-10 bg-muted rounded w-1/4 mt-4" />
                 </div>
               ))}
             </div>
@@ -67,35 +69,15 @@ export default function VocabularyList({
     );
   }
 
-  const filteredWords = selectedDifficultyFilter === 'all' 
-    ? words 
-    : words.filter(word => word.difficulty === selectedDifficultyFilter);
-
-  if (filteredWords.length === 0) {
-    if (selectedDifficultyFilter === 'all') {
-      return (
-         <Alert className="max-w-md mx-auto bg-primary/5 border-primary/20">
-            <FileText className="h-5 w-5 text-primary" />
-            <AlertTitle className="font-headline text-xl text-primary">Your Vocabulary List is Empty</AlertTitle>
-            <AlertDescription className="text-primary-foreground/80">
-              Start your Japanese learning journey by adding your first vocabulary word. Click the "Add Word" button to begin!
-            </AlertDescription>
-          </Alert>
-      );
-    } else {
-      return (
-        <Alert className="max-w-md mx-auto bg-accent/20 border-accent/50">
-           <FilterX className="h-5 w-5 text-accent-foreground" />
-           <AlertTitle className="font-headline text-xl text-accent-foreground">No Words Match Filter</AlertTitle>
-           <AlertDescription className="text-muted-foreground">
-             No vocabulary words found with the difficulty level "{selectedDifficultyFilter}". Try a different filter or add more words!
-           </AlertDescription>
-         </Alert>
-     );
-    }
+  // If not loading and words array is empty, page.tsx will handle showing an alert.
+  // This component should only render if there are words to display or if it's still in its own loading phase.
+  if (!loading && words.length === 0) {
+    return null; // page.tsx handles "No words" or "Empty list" scenarios
   }
   
-  const sortedWords = [...filteredWords].sort((a, b) => compareDesc(new Date(a.createdAt), new Date(b.createdAt)));
+  // Words are already filtered by page.tsx
+  // Sort the incoming words directly
+  const sortedWords = [...words].sort((a, b) => compareDesc(new Date(a.createdAt), new Date(b.createdAt)));
 
   const groupedWords = sortedWords.reduce((acc: GroupedWords, word) => {
     const date = new Date(word.createdAt);
@@ -152,7 +134,7 @@ export default function VocabularyList({
                   onToggleLearned={toggleLearnedStatus}
                   onDelete={deleteWord}
                   onUpdateDifficulty={updateWordDifficulty}
-                  onUpdateWord={updateWord} // Pass down updateWord function
+                  onUpdateWord={updateWord}
                 />
               ))}
             </div>
