@@ -92,7 +92,7 @@ export default function Home() {
           className="transition-all duration-150 ease-in-out"
         >
           <Shuffle className="h-4 w-4 mr-1" />
-          {isTodayRandomized ? "Unshuffle Today" : "Randomize Today's Words"}
+          {isTodayRandomized ? "Unshuffle Today" : "Shuffle Today's Words"}
         </Button>
       </div>
 
