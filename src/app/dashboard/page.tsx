@@ -69,6 +69,7 @@ export default function DashboardPage() {
         easyWords: 0,
         mediumWords: 0,
         hardWords: 0,
+        totalActiveDays: 0,
       };
     }
 
@@ -104,6 +105,7 @@ export default function DashboardPage() {
       easyWords,
       mediumWords,
       hardWords,
+      totalActiveDays: dailyWordCountsArray.length,
     };
   }, [allWords]);
 
@@ -115,7 +117,8 @@ export default function DashboardPage() {
     totalStudied,
     easyWords,
     mediumWords,
-    hardWords 
+    hardWords,
+    totalActiveDays
   } = processedData;
 
   if (authLoading || vocabLoading) {
@@ -192,13 +195,17 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
               <Target className="h-7 w-7 text-primary" />
-              Daily Goal Tracker
+              Daily Goal Adherence
             </CardTitle>
-            <CardDescription>Days you added at least {DAILY_GOAL} words.</CardDescription>
+            <CardDescription>Days you met the {DAILY_GOAL}-word goal out of total days words were added.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-5xl font-bold text-primary">{goalMetDays.length}</p>
-            <p className="text-muted-foreground">day{goalMetDays.length === 1 ? '' : 's'} goal achieved</p>
+            <p className="text-5xl font-bold text-primary">
+              {totalActiveDays > 0 ? `${goalMetDays.length} / ${totalActiveDays}` : '0 / 0'}
+            </p>
+            <p className="text-muted-foreground">
+              Met goal on {goalMetDays.length} day{goalMetDays.length === 1 ? '' : 's'} out of {totalActiveDays} day{totalActiveDays === 1 ? '' : 's'} with activity.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -235,7 +242,7 @@ export default function DashboardPage() {
               <ChartIcon className="h-7 w-7 text-primary" />
               Words Added Per Day
           </CardTitle>
-          <CardDescription>Visualizing your daily vocabulary additions.</CardDescription>
+          <CardDescription>Visualizing your daily vocabulary additions. Goal: {DAILY_GOAL} words/day.</CardDescription>
           </CardHeader>
           <CardContent>
           {chartData.length > 0 ? (
@@ -261,11 +268,7 @@ export default function DashboardPage() {
                       cursor={{ fill: 'hsl(var(--accent)/0.3)' }}
                       content={<ChartTooltipContent indicator="dot" />} 
                   />
-                  <ReferenceLine y={DAILY_GOAL} stroke="hsl(var(--destructive))" strokeDasharray="3 3">
-                      {/* For Recharts 2.x, RechartsTooltip.Label might not work. We can render a label component or simply let the reference line be. */}
-                      {/* For simplicity, if RechartsTooltip.Label causes issues, it can be omitted. The user can see the line. */}
-                      {/* <RechartsTooltip.Label value={`Goal: ${DAILY_GOAL}`} position="insideTopRight" fill="hsl(var(--destructive))" fontSize={10} /> */}
-                  </ReferenceLine>
+                  <ReferenceLine y={DAILY_GOAL} stroke="hsl(var(--destructive))" strokeDasharray="3 3" />
                   <Bar dataKey="count" name="Words Added" fill="var(--color-wordsAdded)" radius={[4, 4, 0, 0]} />
                   </BarChart>
               </ResponsiveContainer>
@@ -310,5 +313,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
