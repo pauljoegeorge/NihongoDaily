@@ -25,9 +25,7 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  // Add allowedDevOrigins for development environment
-  ...(process.env.NODE_ENV === 'development' && {
-    experimental: {
+  experimental: {
       allowedDevOrigins: [
         // This is the origin from the warning log
         '6000-firebase-studio-1749453651055.cluster-fkltigo73ncaixtmokrzxhwsfc.cloudworkstations.dev',
@@ -35,8 +33,10 @@ const nextConfig: NextConfig = {
         // without the cloud workstation proxy.
         'http://localhost:9002', 
       ],
-    },
-  }),
+      // If you have other experimental flags, they would go here.
+      // For example:
+      // serverActions: true,
+  },
 };
 
 export default nextConfig;
