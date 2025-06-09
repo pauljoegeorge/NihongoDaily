@@ -18,7 +18,7 @@ const InitialThemeScript = () => {
         document.documentElement.setAttribute('data-theme', theme);
       }
     })();
-  `;
+  `.trim(); // Added .trim() here to remove leading/trailing whitespace
   return <script dangerouslySetInnerHTML={{ __html: script }} />;
 };
 
