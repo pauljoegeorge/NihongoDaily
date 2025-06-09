@@ -179,13 +179,13 @@ export default function QuizPage() {
       <Card className="w-full max-w-lg min-h-[250px] flex flex-col justify-between items-center p-6 shadow-2xl bg-card relative overflow-hidden transition-all duration-500 ease-in-out transform-style-preserve-3d">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full flex flex-col items-center justify-center text-center ${isFlipped ? 'rotate-y-180' : ''} transform-style-preserve-3d`}>
           {/* Front of Card */}
-          <div className={`absolute w-full h-full flex flex-col items-center justify-center backface-hidden ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-            <p className="font-headline text-6xl text-primary mb-4">{currentWord.japanese}</p>
+          <div className={`absolute w-full h-full flex flex-col items-center justify-center backface-hidden p-4 ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <p className="font-headline text-5xl text-primary mb-4 break-words max-w-full">{currentWord.japanese}</p>
             <Button variant="outline" onClick={handleFlipCard}>Flip Card</Button>
           </div>
 
           {/* Back of Card */}
-          <div className={`absolute w-full h-full flex flex-col items-center justify-center space-y-3 backface-hidden rotate-y-180 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className={`absolute w-full h-full flex flex-col items-center justify-center space-y-3 backface-hidden rotate-y-180 p-4 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <p className="text-2xl text-foreground font-semibold">{currentWord.romaji}</p>
             <p className="text-lg text-muted-foreground">{currentWord.definition}</p>
             <Button variant="outline" onClick={handleFlipCard} className="mt-4">Flip Back</Button>
@@ -225,3 +225,4 @@ export default function QuizPage() {
     </div>
   );
 }
+
