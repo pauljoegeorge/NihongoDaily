@@ -15,11 +15,11 @@ export default function Header() {
           </h1>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="flex items-center gap-1.5 text-sm font-medium text-primary-foreground hover:text-primary hover:bg-primary/10 px-3 py-2 rounded-md transition-colors">
+          <Link href="/dashboard" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
             <LayoutDashboard className="h-5 w-5" />
             Dashboard
           </Link>
-          <Link href="/quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary-foreground hover:text-primary hover:bg-primary/10 px-3 py-2 rounded-md transition-colors">
+          <Link href="/quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
             <BookMarked className="h-5 w-5" />
             Quiz
           </Link>

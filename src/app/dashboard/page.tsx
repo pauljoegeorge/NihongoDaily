@@ -178,7 +178,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="shadow-lg bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
+            <CardTitle className="flex items-center gap-2 text-2xl text-primary">
               <Sigma className="h-7 w-7 text-primary" />
               Total Words
             </CardTitle>
@@ -192,7 +192,7 @@ export default function DashboardPage() {
 
         <Card className="shadow-lg bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
+            <CardTitle className="flex items-center gap-2 text-2xl text-primary">
               <BookCheck className="h-7 w-7 text-primary" />
               Words Studied
             </CardTitle>
@@ -206,7 +206,7 @@ export default function DashboardPage() {
 
         <Card className="shadow-lg bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
+            <CardTitle className="flex items-center gap-2 text-2xl text-primary">
               <Target className="h-7 w-7 text-primary" />
               Daily Goal Adherence
             </CardTitle>
@@ -225,7 +225,7 @@ export default function DashboardPage() {
 
       <Card className="shadow-lg bg-card">
         <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
+            <CardTitle className="flex items-center gap-2 text-2xl text-primary">
                 Words by Difficulty
             </CardTitle>
             <CardDescription>Breakdown of your vocabulary by difficulty level.</CardDescription>
@@ -251,7 +251,7 @@ export default function DashboardPage() {
         
       <Card className="shadow-lg bg-card md:col-span-1">
           <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl text-primary-foreground">
+          <CardTitle className="flex items-center gap-2 text-2xl text-primary">
               <ChartIcon className="h-7 w-7 text-primary" />
               Words Added Per Day
           </CardTitle>
@@ -296,7 +296,7 @@ export default function DashboardPage() {
       {goalMetDays.length > 0 && (
         <Card className="shadow-lg bg-card">
           <CardHeader>
-            <CardTitle className="text-2xl text-primary-foreground">Goal Achievement Days</CardTitle>
+            <CardTitle className="text-2xl text-primary">Goal Achievement Days</CardTitle>
             <CardDescription>Dates you met your daily goal of adding at least {DAILY_GOAL} words, sorted by most recent.</CardDescription>
           </CardHeader>
           <CardContent>

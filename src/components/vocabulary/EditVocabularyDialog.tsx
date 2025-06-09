@@ -88,7 +88,7 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl text-primary">Edit Vocabulary Word</DialogTitle>
           <DialogDescription>
-            Update the details for the Japanese word: <strong className="text-primary-foreground">{wordToEdit?.japanese}</strong>
+            Update the details for the Japanese word: <strong className="text-primary">{wordToEdit?.japanese}</strong>
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
