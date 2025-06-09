@@ -37,14 +37,17 @@ export function useVocabulary() {
       return; 
     }
 
-    console.log(`useVocabulary: Setting up Firestore listener for user ID: ${user.uid}`);
+    const userIdForQuery = user.uid; // Capture uid for logging
+    console.log(`[DIAGNOSTIC] useVocabulary: Setting up Firestore listener for user ID: ${userIdForQuery}`);
     setLoading(true);
     const vocabularyCollectionRef = collection(db, 'vocabulary');
     const q = query(
       vocabularyCollectionRef,
-      where('userId', '==', user.uid),
+      where('userId', '==', userIdForQuery),
       orderBy('createdAt', 'desc')
     );
+
+    console.log("[DIAGNOSTIC] useVocabulary: Query constructed for onSnapshot:", q);
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedWords: VocabularyWord[] = [];
@@ -69,39 +72,38 @@ export function useVocabulary() {
       });
       setWords(fetchedWords);
       setLoading(false);
-      console.log(`useVocabulary: Fetched ${fetchedWords.length} words from Firestore via onSnapshot.`);
-    }, (error: any) => { // Changed to 'any' to access potential Firebase error properties
-      console.error("[DIAGNOSTIC] Detailed Firestore Error in onSnapshot listener:", error);
+      console.log(`[DIAGNOSTIC] useVocabulary: Fetched ${fetchedWords.length} words for user ${userIdForQuery} from Firestore via onSnapshot.`);
+    }, (error: any) => { 
+      console.error("[DIAGNOSTIC] Full Firestore Error object in onSnapshot listener:", error);
+      const errorCode = error.code || 'N/A';
+      const errorMessage = error.message || 'No specific message';
+      console.error(`[DIAGNOSTIC] Firestore onSnapshot Error - Code: ${errorCode}, Message: ${errorMessage}`);
+      
       setLoading(false);
-      let description = "Could not fetch your vocabulary. Check console for details.";
       let title = "Error Fetching Vocabulary";
+      let description = `Could not fetch your vocabulary. Code: ${errorCode}. Message: ${errorMessage}.`;
 
-      // Try to get more specific error details from Firebase
-      if (error.code) {
-        description = `Could not fetch vocabulary: ${error.message} (Code: ${error.code})`;
-        if (error.code === 'permission-denied' || error.message.includes('permission-denied') || error.message.includes('Missing or insufficient permissions')) {
-          title = "Permission Denied";
-          description = "You don't have permission to read vocabulary. Check Firestore rules.";
-        } else if (error.code === 'failed-precondition' && error.message.toLowerCase().includes('index')) {
-          title = "Indexing Error";
-          description = "A required Firestore index is missing or not yet built. Please check the Firebase console (Firestore > Indexes) for a prompt to create it, or create it manually. The query requires an index on 'vocabulary' collection: userId (Ascending), createdAt (Descending).";
-        }
-      } else if (error.message) {
-        description = `An unexpected error occurred: ${error.message}`;
+      if (errorCode === 'failed-precondition' || errorMessage.toLowerCase().includes('index')) {
+        title = "Indexing Error";
+        description = "A required Firestore index is missing, not yet built, or incorrect. Please check the Firebase console (Firestore > Indexes). The query likely requires an index on 'vocabulary' collection: userId (Ascending), createdAt (Descending).";
+      } else if (errorCode === 'permission-denied' || errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')) {
+        title = "Permission Denied";
+        description = "You don't have permission to read vocabulary. Check Firestore rules.";
       }
       
       toast({
         title: title,
         description: description,
         variant: "destructive",
+        duration: 10000, // Give more time to read potentially long messages
       });
     });
 
     return () => {
-      console.log("useVocabulary: Unsubscribing from Firestore listener.");
+      console.log(`[DIAGNOSTIC] useVocabulary: Unsubscribing from Firestore listener for user ${userIdForQuery}.`);
       unsubscribe(); 
     }
-  }, [user, toast]);
+  }, [user, toast]); // `toast` is stable, `user` object changes trigger re-run
 
   const addWord = useCallback(async (newWordData: Omit<VocabularyWord, 'id' | 'learned' | 'createdAt'>): Promise<VocabularyWord | undefined> => {
     if (!user) {
@@ -129,6 +131,7 @@ export function useVocabulary() {
       
       toast({ title: "Success!", description: `Word "${newWordData.japanese}" submitted to the database. It will appear shortly.` });
       
+      // Return a client-side representation; onSnapshot will provide the server-confirmed data
       return { 
         id: docRef.id, 
         japanese: newWordData.japanese,
@@ -136,20 +139,19 @@ export function useVocabulary() {
         romaji: newWordData.romaji,
         exampleSentences: newWordData.exampleSentences || [],
         learned: false, 
-        createdAt: Date.now(), // Temporary client timestamp, will be updated by onSnapshot
+        createdAt: Date.now(), 
         difficulty: newWordData.difficulty || 'medium'
       } as VocabularyWord;
 
     } catch (error: any) {
-      console.error("[DIAGNOSTIC] Detailed Firestore Error in addWord:", error);
-      let description = "Could not add word. Please try again. Check console for details.";
-      if (error.code) {
-        description = `Error adding word: ${error.message} (Code: ${error.code})`;
-        if (error.code === 'permission-denied') {
-          description += " Check Firestore rules.";
-        }
-      } else if (error.message) {
-        description = `Error adding word: ${error.message}`;
+      console.error("[DIAGNOSTIC] Full Firestore Error object in addWord:", error);
+      const errorCode = error.code || 'N/A';
+      const errorMessage = error.message || 'No specific message';
+      console.error(`[DIAGNOSTIC] Firestore addWord Error - Code: ${errorCode}, Message: ${errorMessage}`);
+
+      let description = `Could not add word. Code: ${errorCode}. Message: ${errorMessage}.`;
+      if (errorCode === 'permission-denied') {
+        description += " Check Firestore rules.";
       }
       toast({ title: "Database Error", description, variant: "destructive" });
       return undefined;
@@ -161,36 +163,27 @@ export function useVocabulary() {
 
     const wordRef = doc(db, 'vocabulary', wordId);
     try {
-      console.log(`[DIAGNOSTIC] useVocabulary: Getting doc ${wordId} to toggle learned status.`);
       const docSnap = await getDoc(wordRef);
-      console.log(`[DIAGNOSTIC] useVocabulary: Got doc ${wordId}. Exists: ${docSnap.exists()}`);
       if (docSnap.exists()) {
         if (docSnap.data().userId !== user.uid) {
           toast({ title: "Error", description: "Cannot modify this word (permission).", variant: "destructive" });
           return;
         }
         const currentLearnedStatus = docSnap.data().learned;
-        console.log(`[DIAGNOSTIC] useVocabulary: Updating learned status for ${wordId} to ${!currentLearnedStatus}.`);
         await updateDoc(wordRef, { learned: !currentLearnedStatus });
-        console.log(`[DIAGNOSTIC] useVocabulary: Update successful for ${wordId}.`);
         toast({
           title: "Progress Updated",
           description: `Word marked as ${!currentLearnedStatus ? 'learned' : 'not learned'}.`,
         });
       } else {
-        console.warn(`[DIAGNOSTIC] useVocabulary: Word ${wordId} not found for toggleLearnedStatus.`);
         toast({ title: "Error", description: "Word not found.", variant: "destructive" });
       }
-    } catch (error: any)
-     {
-      console.error("[DIAGNOSTIC] Detailed Firestore Error in toggleLearnedStatus:", error);
-      let description = "Could not update learned status. Check console.";
-      if (error.code) {
-        description = `Error: ${error.message} (Code: ${error.code})`;
-      } else if (error.message) {
-        description = `Error: ${error.message}`;
-      }
-      toast({ title: "Error", description, variant: "destructive" });
+    } catch (error: any) {
+      console.error("[DIAGNOSTIC] Full Firestore Error object in toggleLearnedStatus:", error);
+      const errorCode = error.code || 'N/A';
+      const errorMessage = error.message || 'No specific message';
+      console.error(`[DIAGNOSTIC] Firestore toggleLearnedStatus Error - Code: ${errorCode}, Message: ${errorMessage}`);
+      toast({ title: "Error", description: `Could not update learned status. Code: ${errorCode}.`, variant: "destructive" });
     }
   }, [user, toast]);
 
@@ -199,27 +192,20 @@ export function useVocabulary() {
 
     const wordRef = doc(db, 'vocabulary', wordId);
     try {
-      console.log(`[DIAGNOSTIC] useVocabulary: Getting doc ${wordId} to delete.`);
       const docSnap = await getDoc(wordRef);
-      console.log(`[DIAGNOSTIC] useVocabulary: Got doc ${wordId} for deletion. Exists: ${docSnap.exists()}`);
       const wordJapanese = docSnap.exists() ? docSnap.data().japanese : "Word";
       if (docSnap.exists() && docSnap.data().userId !== user.uid) {
          toast({ title: "Error", description: "Cannot delete this word (permission).", variant: "destructive" });
          return;
       }
-      console.log(`[DIAGNOSTIC] useVocabulary: Deleting doc ${wordId}.`);
       await deleteDoc(wordRef);
-      console.log(`[DIAGNOSTIC] useVocabulary: Deletion successful for ${wordId}.`);
       toast({ title: "Word Deleted", description: `"${wordJapanese}" has been removed from your database.` });
     } catch (error: any) {
-      console.error("[DIAGNOSTIC] Detailed Firestore Error in deleteWord:", error);
-      let description = "Could not delete word. Check console.";
-      if (error.code) {
-        description = `Error: ${error.message} (Code: ${error.code})`;
-      } else if (error.message) {
-        description = `Error: ${error.message}`;
-      }
-      toast({ title: "Error", description, variant: "destructive" });
+      console.error("[DIAGNOSTIC] Full Firestore Error object in deleteWord:", error);
+      const errorCode = error.code || 'N/A';
+      const errorMessage = error.message || 'No specific message';
+      console.error(`[DIAGNOSTIC] Firestore deleteWord Error - Code: ${errorCode}, Message: ${errorMessage}`);
+      toast({ title: "Error", description: `Could not delete word. Code: ${errorCode}.`, variant: "destructive" });
     }
   }, [user, toast]);
 
@@ -228,27 +214,20 @@ export function useVocabulary() {
     
     const wordRef = doc(db, 'vocabulary', wordId);
     try {
-      console.log(`[DIAGNOSTIC] useVocabulary: Getting doc ${wordId} to update difficulty.`);
       const docSnap = await getDoc(wordRef);
-      console.log(`[DIAGNOSTIC] useVocabulary: Got doc ${wordId} for difficulty update. Exists: ${docSnap.exists()}`);
       const wordJapanese = docSnap.exists() ? docSnap.data().japanese : "Word";
       if (docSnap.exists() && docSnap.data().userId !== user.uid) {
          toast({ title: "Error", description: "Cannot update difficulty for this word (permission).", variant: "destructive" });
          return;
       }
-      console.log(`[DIAGNOSTIC] useVocabulary: Updating difficulty for ${wordId} to ${difficulty}.`);
       await updateDoc(wordRef, { difficulty });
-      console.log(`[DIAGNOSTIC] useVocabulary: Difficulty update successful for ${wordId}.`);
       toast({ title: "Difficulty Updated", description: `"${wordJapanese}" marked as ${difficulty}.` });
     } catch (error: any) {
-      console.error("[DIAGNOSTIC] Detailed Firestore Error in updateWordDifficulty:", error);
-      let description = "Could not update difficulty. Check console.";
-      if (error.code) {
-        description = `Error: ${error.message} (Code: ${error.code})`;
-      } else if (error.message) {
-        description = `Error: ${error.message}`;
-      }
-      toast({ title: "Error", description, variant: "destructive" });
+      console.error("[DIAGNOSTIC] Full Firestore Error object in updateWordDifficulty:", error);
+      const errorCode = error.code || 'N/A';
+      const errorMessage = error.message || 'No specific message';
+      console.error(`[DIAGNOSTIC] Firestore updateWordDifficulty Error - Code: ${errorCode}, Message: ${errorMessage}`);
+      toast({ title: "Error", description: `Could not update difficulty. Code: ${errorCode}.`, variant: "destructive" });
     }
   }, [user, toast]);
   
