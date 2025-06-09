@@ -1,6 +1,7 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore, serverTimestamp, Timestamp } from "firebase/firestore"; // Added Firestore imports
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,5 +22,7 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+const db = getFirestore(app); // Initialize Firestore
 
-export { app, auth, googleProvider };
+export { app, auth, googleProvider, db, serverTimestamp, Timestamp }; // Export Firestore utilities
+
