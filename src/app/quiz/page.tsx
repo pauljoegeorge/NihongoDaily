@@ -176,7 +176,7 @@ export default function QuizPage() {
       <p className="text-center text-muted-foreground">
         Word {currentWordIndex + 1} of {quizWords.length}
       </p>
-      <Card className="w-full max-w-lg min-h-[250px] flex flex-col justify-between items-center p-6 shadow-2xl bg-card relative overflow-hidden transition-all duration-500 ease-in-out transform-style-preserve-3d">
+      <Card className="w-full max-w-lg min-h-[320px] flex flex-col p-6 shadow-2xl bg-card relative overflow-hidden transition-all duration-500 ease-in-out transform-style-preserve-3d">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full flex flex-col items-center justify-center text-center ${isFlipped ? 'rotate-y-180' : ''} transform-style-preserve-3d`}>
           {/* Front of Card */}
           <div className={`absolute w-full h-full flex flex-col items-center justify-center backface-hidden p-4 ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
