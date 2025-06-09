@@ -1,5 +1,7 @@
+
 import { Cherry } from 'lucide-react';
 import Link from 'next/link';
+import SignInButton from '@/components/auth/SignInButton'; // Added SignInButton import
 
 export default function Header() {
   return (
@@ -11,7 +13,7 @@ export default function Header() {
             Nihongo Daily
           </h1>
         </Link>
-        {/* Navigation items can be added here if needed */}
+        <SignInButton /> {/* Added SignInButton component */}
       </div>
     </header>
   );
