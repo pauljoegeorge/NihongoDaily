@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import type { VocabularyWord } from '@/types';
-import { format, parseISO, startOfDay, compareAsc } from 'date-fns';
+import { format, parseISO, startOfDay, compareAsc, differenceInCalendarDays } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
@@ -69,7 +69,7 @@ export default function DashboardPage() {
         easyWords: 0,
         mediumWords: 0,
         hardWords: 0,
-        totalActiveDays: 0,
+        daysSinceFirstEntry: 0,
       };
     }
 
@@ -78,9 +78,14 @@ export default function DashboardPage() {
     let easyWords = 0;
     let mediumWords = 0;
     let hardWords = 0;
+    let minCreatedAt = Infinity;
 
     allWords.forEach(word => {
-      const dateStr = format(startOfDay(new Date(word.createdAt)), 'yyyy-MM-dd');
+      const wordDate = new Date(word.createdAt);
+      if (wordDate.getTime() < minCreatedAt) {
+        minCreatedAt = wordDate.getTime();
+      }
+      const dateStr = format(startOfDay(wordDate), 'yyyy-MM-dd');
       countsByDate[dateStr] = (countsByDate[dateStr] || 0) + 1;
       if (word.learned) totalStudied++;
       if (word.difficulty === 'easy') easyWords++;
@@ -96,6 +101,14 @@ export default function DashboardPage() {
       .filter(item => item.count >= DAILY_GOAL)
       .sort((a,b) => compareAsc(parseISO(b.date), parseISO(a.date))); 
 
+    let daysSinceFirstEntry = 0;
+    if (minCreatedAt !== Infinity) {
+      const today = startOfDay(new Date());
+      const firstDayOfActivity = startOfDay(new Date(minCreatedAt));
+      daysSinceFirstEntry = differenceInCalendarDays(today, firstDayOfActivity) + 1;
+    }
+    
+
     return {
       dailyWordCounts: dailyWordCountsArray,
       goalMetDays: goalMetDaysArray,
@@ -105,7 +118,7 @@ export default function DashboardPage() {
       easyWords,
       mediumWords,
       hardWords,
-      totalActiveDays: dailyWordCountsArray.length,
+      daysSinceFirstEntry,
     };
   }, [allWords]);
 
@@ -118,7 +131,7 @@ export default function DashboardPage() {
     easyWords,
     mediumWords,
     hardWords,
-    totalActiveDays
+    daysSinceFirstEntry
   } = processedData;
 
   if (authLoading || vocabLoading) {
@@ -197,14 +210,14 @@ export default function DashboardPage() {
               <Target className="h-7 w-7 text-primary" />
               Daily Goal Adherence
             </CardTitle>
-            <CardDescription>Days you met the {DAILY_GOAL}-word goal out of total days words were added.</CardDescription>
+            <CardDescription>Days you met the {DAILY_GOAL}-word goal out of total days since your first word entry.</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-5xl font-bold text-primary">
-              {totalActiveDays > 0 ? `${goalMetDays.length} / ${totalActiveDays}` : '0 / 0'}
+              {daysSinceFirstEntry > 0 ? `${goalMetDays.length} / ${daysSinceFirstEntry}` : '0 / 0'}
             </p>
             <p className="text-muted-foreground">
-              Met goal on {goalMetDays.length} day{goalMetDays.length === 1 ? '' : 's'} out of {totalActiveDays} day{totalActiveDays === 1 ? '' : 's'} with activity.
+              Met goal on {goalMetDays.length} day{goalMetDays.length === 1 ? '' : 's'} out of {daysSinceFirstEntry} day{daysSinceFirstEntry === 1 ? '' : 's'} since first entry.
             </p>
           </CardContent>
         </Card>
@@ -313,3 +326,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
+    
