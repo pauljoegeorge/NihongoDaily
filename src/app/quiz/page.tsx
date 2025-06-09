@@ -167,6 +167,30 @@ export default function QuizPage() {
   }
 
   const currentWord = quizWords[currentWordIndex];
+  const ActionButtons = () => (
+    <div className="flex gap-4 w-full justify-center mt-auto pt-4 border-t border-border/20">
+      <Button 
+        onClick={() => handleAnswer(false)} 
+        variant="destructive" 
+        size="icon" 
+        className="h-12 w-12 rounded-full"
+        aria-label="Didn't know"
+        disabled={processingAnswer}
+      >
+        {processingAnswer && !isFlipped ? <Loader2 className="h-6 w-6 animate-spin" /> : <XCircle className="h-6 w-6" />}
+      </Button>
+      <Button 
+        onClick={() => handleAnswer(true)} 
+        variant="default" 
+        size="icon" 
+        className="h-12 w-12 rounded-full bg-green-500 hover:bg-green-600 text-white"
+        aria-label="Knew it"
+        disabled={processingAnswer}
+      >
+        {processingAnswer && isFlipped ? <Loader2 className="h-6 w-6 animate-spin" /> : <CheckCircle className="h-6 w-6" />}
+      </Button>
+    </div>
+  );
 
   return (
     <div className="flex flex-col items-center pt-8 space-y-8">
@@ -177,43 +201,25 @@ export default function QuizPage() {
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
           {/* Front of Card */}
           <div className={`absolute w-full h-full flex flex-col items-center backface-hidden p-4 text-center ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-            <p className="font-headline text-5xl text-primary mb-4 break-words max-w-full">{currentWord.japanese}</p>
-            <Button variant="outline" onClick={handleFlipCard}>Flip Card</Button>
+            <div className="flex-grow flex flex-col items-center justify-center w-full"> {/* Wrapper for main content */}
+              <p className="font-headline text-5xl text-primary mb-4 break-words max-w-full">{currentWord.japanese}</p>
+              <Button variant="outline" onClick={handleFlipCard}>Flip Card</Button>
+            </div>
+            <ActionButtons />
           </div>
 
           {/* Back of Card */}
-          <div className={`absolute w-full h-full flex flex-col items-center space-y-3 backface-hidden rotate-y-180 p-4 text-center ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <p className="text-2xl text-foreground font-semibold">{currentWord.romaji}</p>
-            <p className="text-lg text-muted-foreground">{currentWord.definition}</p>
-            <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">Flip Back</Button>
-            
-            <div className="flex gap-4 mt-2">
-              <Button 
-                onClick={() => handleAnswer(false)} 
-                variant="destructive" 
-                size="icon" 
-                className="h-12 w-12 rounded-full"
-                aria-label="Didn't know"
-                disabled={processingAnswer}
-              >
-                {processingAnswer ? <Loader2 className="h-6 w-6 animate-spin" /> : <XCircle className="h-6 w-6" />}
-              </Button>
-              <Button 
-                onClick={() => handleAnswer(true)} 
-                variant="default" 
-                size="icon" 
-                className="h-12 w-12 rounded-full bg-green-500 hover:bg-green-600 text-white"
-                aria-label="Knew it"
-                disabled={processingAnswer}
-              >
-                {processingAnswer ? <Loader2 className="h-6 w-6 animate-spin" /> : <CheckCircle className="h-6 w-6" />}
-              </Button>
+          <div className={`absolute w-full h-full flex flex-col items-center backface-hidden rotate-y-180 p-4 text-center ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3"> {/* Wrapper for main content */}
+              <p className="text-2xl text-foreground font-semibold">{currentWord.romaji}</p>
+              <p className="text-lg text-muted-foreground">{currentWord.definition}</p>
+              <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">Flip Back</Button>
             </div>
+            <ActionButtons />
           </div>
         </div>
       </Card>
 
-      {/* Removed the old conditional button rendering block from here */}
       <style jsx global>{`
         .transform-style-preserve-3d { transform-style: preserve-3d; }
         .rotate-y-180 { transform: rotateY(180deg); }
@@ -222,3 +228,4 @@ export default function QuizPage() {
     </div>
   );
 }
+
