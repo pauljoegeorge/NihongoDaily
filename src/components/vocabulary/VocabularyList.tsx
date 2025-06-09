@@ -1,9 +1,9 @@
 
 "use client";
 
-import type { VocabularyWord } from '@/types';
+import type { VocabularyWord, DifficultyFilter } from '@/types';
 import VocabularyCard from './VocabularyCard';
-import { FileText } from 'lucide-react';
+import { FileText, FilterX } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format, isToday, isYesterday, parseISO, compareDesc } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
@@ -14,19 +14,28 @@ interface VocabularyListProps {
   toggleLearnedStatus: (id: string) => void;
   deleteWord: (id: string) => void;
   updateWordDifficulty: (id: string, difficulty: 'easy' | 'medium' | 'hard') => void;
+  selectedDifficultyFilter: DifficultyFilter;
 }
 
 interface GroupedWords {
   [key: string]: VocabularyWord[];
 }
 
-export default function VocabularyList({ words, loading, toggleLearnedStatus, deleteWord, updateWordDifficulty }: VocabularyListProps) {
+export default function VocabularyList({ 
+  words, 
+  loading, 
+  toggleLearnedStatus, 
+  deleteWord, 
+  updateWordDifficulty,
+  selectedDifficultyFilter 
+}: VocabularyListProps) {
+
   if (loading) {
     return (
       <div className="space-y-8">
         {[...Array(2)].map((_, groupIndex) => (
           <div key={groupIndex}>
-            <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
+            <div className="h-8 bg-muted rounded w-1/4 mb-4 animate-pulse"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(3)].map((_, cardIndex) => (
                 <div key={cardIndex} className="bg-card p-6 rounded-lg shadow-md animate-pulse">
@@ -44,19 +53,35 @@ export default function VocabularyList({ words, loading, toggleLearnedStatus, de
     );
   }
 
-  if (words.length === 0) {
-    return (
-       <Alert className="max-w-md mx-auto bg-primary/5 border-primary/20">
-          <FileText className="h-5 w-5 text-primary" />
-          <AlertTitle className="font-headline text-xl text-primary">Your Vocabulary List is Empty</AlertTitle>
-          <AlertDescription className="text-primary-foreground/80">
-            Start your Japanese learning journey by adding your first vocabulary word. Click the "Add Word" button to begin!
-          </AlertDescription>
-        </Alert>
-    );
+  const filteredWords = selectedDifficultyFilter === 'all' 
+    ? words 
+    : words.filter(word => word.difficulty === selectedDifficultyFilter);
+
+  if (filteredWords.length === 0) {
+    if (selectedDifficultyFilter === 'all') {
+      return (
+         <Alert className="max-w-md mx-auto bg-primary/5 border-primary/20">
+            <FileText className="h-5 w-5 text-primary" />
+            <AlertTitle className="font-headline text-xl text-primary">Your Vocabulary List is Empty</AlertTitle>
+            <AlertDescription className="text-primary-foreground/80">
+              Start your Japanese learning journey by adding your first vocabulary word. Click the "Add Word" button to begin!
+            </AlertDescription>
+          </Alert>
+      );
+    } else {
+      return (
+        <Alert className="max-w-md mx-auto bg-accent/20 border-accent/50">
+           <FilterX className="h-5 w-5 text-accent-foreground" />
+           <AlertTitle className="font-headline text-xl text-accent-foreground">No Words Match Filter</AlertTitle>
+           <AlertDescription className="text-muted-foreground">
+             No vocabulary words found with the difficulty level "{selectedDifficultyFilter}". Try a different filter or add more words!
+           </AlertDescription>
+         </Alert>
+     );
+    }
   }
   
-  const sortedWords = [...words].sort((a, b) => compareDesc(new Date(a.createdAt), new Date(b.createdAt)));
+  const sortedWords = [...filteredWords].sort((a, b) => compareDesc(new Date(a.createdAt), new Date(b.createdAt)));
 
   const groupedWords = sortedWords.reduce((acc: GroupedWords, word) => {
     const date = new Date(word.createdAt);
@@ -82,7 +107,6 @@ export default function VocabularyList({ words, loading, toggleLearnedStatus, de
     if (b === 'Today') return 1;
     if (a === 'Yesterday') return -1;
     if (b === 'Yesterday') return 1;
-    // For date strings 'YYYY-MM-DD', sort them in reverse chronological order
     return compareDesc(parseISO(a), parseISO(b));
   });
 
@@ -117,4 +141,3 @@ export default function VocabularyList({ words, loading, toggleLearnedStatus, de
     </div>
   );
 }
-

@@ -1,3 +1,7 @@
+
+export type Difficulty = 'easy' | 'medium' | 'hard';
+export type DifficultyFilter = Difficulty | 'all';
+
 export interface VocabularyWord {
   id: string;
   japanese: string;
@@ -6,6 +10,5 @@ export interface VocabularyWord {
   exampleSentences: string[];
   learned: boolean;
   createdAt: number; // Timestamp for sorting and potential daily grouping
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: Difficulty;
 }
-
