@@ -50,7 +50,7 @@ export function useVocabulary() {
     const q = query(
       vocabularyCollectionRef,
       where('userId', '==', userIdForQuery),
-      orderBy('createdAt', 'asc') // << CHANGED FROM 'desc' to 'asc'
+      orderBy('createdAt', 'asc') // << ASCENDING as per previous fix
     );
     console.log("[DIAGNOSTIC] useVocabulary: Query constructed for onSnapshot:", q);
 
@@ -88,15 +88,24 @@ export function useVocabulary() {
       let title = "Error Fetching Vocabulary";
       let description = `Could not fetch your vocabulary. Code: ${errorCode}. Message: ${errorMessage}.`;
 
-      if (errorCode === 'failed-precondition' || errorMessage.toLowerCase().includes('index') || errorMessage.toLowerCase().includes('requires an index')) {
+      if (errorCode === 'failed-precondition' || errorMessage.toLowerCase().includes('index')) {
         title = "Firestore Indexing Error (Listener)";
-        description = `A required Firestore index for the vocabulary listener is missing, not yet built, or incorrect (e.g. sort order mismatch). Please go to your Firebase Console (Firestore > Indexes) for project '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}' and ensure you have the correct composite index for collection 'vocabulary' with fields 'userId' (Ascending) then 'createdAt' (Ascending, or Descending if you change the query). The error message from Firestore was: "${errorMessage}"`;
+        let detailedDescription = `A required Firestore index is missing or not yet built for the 'vocabulary' collection. `;
+        const createIndexUrlMatch = errorMessage.match(/(https?:\/\/[^\s]+console\.firebase\.google\.com[^\s]*)/);
+
+        if (createIndexUrlMatch && createIndexUrlMatch[0]) {
+          detailedDescription += `Firestore suggests creating it here: ${createIndexUrlMatch[0]} (You may need to copy this URL from your browser's developer console and open it in a new tab). `;
+        } else {
+           detailedDescription += `Please check your browser's developer console for a direct link from Firestore to create the required index. `;
+        }
+        detailedDescription += `Alternatively, manually create a composite index in Firebase project '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}' (Firestore > Indexes) for collection 'vocabulary' with fields 'userId' (Ascending) then 'createdAt' (Ascending). Original error: ${errorMessage}`;
+        description = detailedDescription;
       } else if (errorCode === 'permission-denied' || errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')) {
         title = "Permission Denied (Listener)";
         description = `You don't have permission to read vocabulary. Check Firestore rules for project '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}'.`;
       } else if (error.name === 'FirebaseError' && error.code === 'cancelled') {
         console.warn("[DIAGNOSTIC] Firestore onSnapshot listener was cancelled. This is often normal during component unmount or query changes.");
-        return;
+        return; 
       } else if (error.name === 'FirebaseError' && error.code === 'unimplemented') {
         title = "Operation Not Supported (Listener)";
         description = "The query operation is not supported. " + errorMessage;
@@ -112,12 +121,14 @@ export function useVocabulary() {
         title: title,
         description: description,
         variant: "destructive",
-        duration: 20000,
+        duration: 30000, // Increased duration for complex error messages
       });
     });
 
     return () => {
-      console.log(`[DIAGNOSTIC] useVocabulary: Unsubscribing from Firestore listener for user ${userIdForQuery}.`);
+      if (user) { // Only log unsubscribe if user was present
+        console.log(`[DIAGNOSTIC] useVocabulary: Unsubscribing from Firestore listener for user ${userIdForQuery}.`);
+      }
       unsubscribe();
     };
   }, [user, toast]);
@@ -146,13 +157,15 @@ export function useVocabulary() {
       const docRef = await addDoc(vocabularyCollectionRef, firestoreDocData);
       console.log("[DIAGNOSTIC] useVocabulary: Word successfully submitted to Firestore, docRef ID:", docRef.id);
       
-      toast({ title: "Success!", description: `Word "${newWordData.japanese}" submitted. It will appear shortly.` });
+      // Rely on onSnapshot to update the local state, avoid getDoc here
+      toast({ title: "Word Submitted", description: `Word "${newWordData.japanese}" submitted. It will appear shortly.` });
       
+      // Return a representation of the word; exact createdAt will come from listener
       return {
         id: docRef.id,
         ...newWordData,
         learned: false,
-        createdAt: Date.now(), 
+        createdAt: Date.now(), // Placeholder, actual value comes from server
       } as VocabularyWord;
 
     } catch (error: any) {
@@ -243,7 +256,8 @@ export function useVocabulary() {
       }
       await updateDoc(wordRef, { difficulty });
       toast({ title: "Difficulty Updated", description: `"${wordJapanese}" marked as ${difficulty}.` });
-    } catch (error: any) {
+    } catch (error: any)
+{
       console.error("[DIAGNOSTIC] Full Firestore Error object in updateWordDifficulty:", error);
       const errorCode = error.code || 'N/A';
       const errorMessage = error.message || 'No specific message';
