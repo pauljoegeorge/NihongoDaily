@@ -44,8 +44,8 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
   return (
     <>
       <Card className={`transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl ${word.learned ? 'bg-primary/5 border-primary/30' : 'bg-card'}`}>
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-start">
+        <CardHeader> {/* Removed pb-3 to use default p-6 padding */}
+          <div className="flex justify-between items-center"> {/* Changed items-start to items-center */}
             <div>
               <CardTitle className="font-headline text-3xl text-primary flex items-center">
                 {word.japanese}
@@ -76,10 +76,10 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
               
               {!word.learned && (
                 <Button
-                  variant="ghost"
+                  variant="outline" // Changed to outline for visibility debugging
                   size="icon" 
                   onClick={() => onToggleLearned(word.id)}
-                  className="text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                  className="text-green-500 hover:text-green-600 hover:bg-green-500/10 border-green-500" // Added border color for outline
                   aria-label="Mark as Learned"
                   title="Mark as Learned"
                 >
@@ -88,10 +88,10 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
               )}
               {word.learned && (
                 <Button
-                  variant="ghost"
+                  variant="outline" // Changed to outline for visibility debugging
                   size="icon" 
                   onClick={() => onToggleLearned(word.id)}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500" // Added border color for outline
                   aria-label="Mark as Unlearned"
                   title="Mark as Unlearned"
                 >
@@ -101,7 +101,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-4"> {/* Added pt-4 for more space below header */}
           <div className="flex items-center gap-2 text-foreground">
             <BookOpen className="h-5 w-5 text-accent-foreground" />
             <p>{word.definition}</p>
