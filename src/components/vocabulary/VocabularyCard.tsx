@@ -80,7 +80,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
                 className="flex items-center gap-1 text-sm"
               >
                 {word.learned ? <Circle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-                {word.learned ? 'Forgot' : 'Learned'}
+                {word.learned ? 'Mark as Unlearned' : 'Mark as Learned'}
               </Button>
             </div>
           </div>
@@ -154,3 +154,4 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
     </>
   );
 }
+
