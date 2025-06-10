@@ -71,14 +71,13 @@ export default function FillQuizPage() {
       const sentenceIndex = Math.floor(Math.random() * word.exampleSentences.length);
       const originalSentence = word.exampleSentences[sentenceIndex];
       
-      // More robust blanking: case-insensitive, whole word
       const wordToBlank = word.japanese;
-      // Escape regex special characters in wordToBlank
       const escapedWordToBlank = wordToBlank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const blankRegex = new RegExp(`\\b${escapedWordToBlank}\\b`, 'gi'); // word boundary, global, case-insensitive
+      // Use a less strict regex by removing word boundaries \b
+      const blankRegex = new RegExp(escapedWordToBlank, 'gi'); 
       
-      if (!blankRegex.test(originalSentence)) { // If word not found (should be rare if data is good)
-          console.warn(`Word "${wordToBlank}" not found in sentence "${originalSentence}". Skipping.`);
+      if (!blankRegex.test(originalSentence)) { 
+          console.warn(`Word "${wordToBlank}" not found in sentence "${originalSentence}" with regex /${escapedWordToBlank}/gi. Skipping.`);
           continue;
       }
       const blankedSentence = originalSentence.replace(blankRegex, "_______");
@@ -99,12 +98,9 @@ export default function FillQuizPage() {
         }
       }
       
-      // If not enough distractors found from unique words, we might have an issue.
-      // For now, we proceed, but ideally, we need at least NUM_OPTIONS unique words in allWords.
       if (distractors.length < NUM_OPTIONS - 1) {
           console.warn(`Not enough unique distractors for word "${word.japanese}". Quiz quality might be affected.`);
-          // Fill with placeholders if absolutely necessary, or skip question
-          while(distractors.length < NUM_OPTIONS - 1) distractors.push("選択肢" + (distractors.length + 1)); // Placeholder "Option X"
+          while(distractors.length < NUM_OPTIONS - 1) distractors.push("選択肢" + (distractors.length + 1)); 
       }
 
 
@@ -121,7 +117,7 @@ export default function FillQuizPage() {
     }
     
     if (generatedQuestions.length === 0) {
-        setQuizState('insufficient_data'); // Possible if all selected words failed blanking
+        setQuizState('insufficient_data'); 
         return;
     }
 
@@ -159,7 +155,6 @@ export default function FillQuizPage() {
   
   const handleRestartQuiz = () => {
     setQuizState('initial'); 
-    // prepareQuiz will be called by useEffect when quizState changes to 'initial' and user/words are loaded
   };
 
   useEffect(() => {
@@ -211,7 +206,7 @@ export default function FillQuizPage() {
   }
 
 
-  if (quizState === 'initial') { // Still here means user is logged in, but prepareQuiz hasn't run or finished
+  if (quizState === 'initial') { 
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Card className="w-full max-w-lg text-center p-8 shadow-xl bg-card">
@@ -272,7 +267,6 @@ export default function FillQuizPage() {
   }
   
   if (quizState !== 'playing' || quizQuestions.length === 0 || !quizQuestions[currentQuestionIndex]) {
-    // Fallback for unexpected states, or if questions are not ready
     return (
        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Alert className="max-w-lg text-center">
@@ -356,6 +350,3 @@ export default function FillQuizPage() {
     </div>
   );
 }
-
-
-    
