@@ -1,5 +1,5 @@
 
-import { Cherry, BookMarked, LayoutDashboard } from 'lucide-react'; // Added LayoutDashboard icon
+import { Cherry, BookMarked, LayoutDashboard, FileQuestion } from 'lucide-react'; // Added LayoutDashboard, FileQuestion icons
 import Link from 'next/link';
 import SignInButton from '@/components/auth/SignInButton';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
@@ -8,7 +8,7 @@ export default function Header() {
   return (
     <header className="bg-primary/10 py-4 shadow-md">
       <div className="container mx-auto px-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-primary-foreground hover:text-primary-foreground/80 transition-colors">
+        <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
           <Cherry className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-headline font-bold text-primary">
             Nihongo Daily
@@ -21,7 +21,11 @@ export default function Header() {
           </Link>
           <Link href="/quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
             <BookMarked className="h-5 w-5" />
-            Quiz
+            Flashcards
+          </Link>
+          <Link href="/fill-quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
+            <FileQuestion className="h-5 w-5" />
+            Fill Quiz
           </Link>
           <ThemeSwitcher />
           <SignInButton />
@@ -30,4 +34,3 @@ export default function Header() {
     </header>
   );
 }
-

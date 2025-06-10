@@ -26,3 +26,11 @@ export interface FirestoreVocabularyWord {
   userId: string;
 }
 
+export interface FillQuizQuestion {
+  id: string; // Corresponds to VocabularyWord id
+  originalSentence: string;
+  blankedSentence: string;
+  options: string[]; // Japanese words
+  correctAnswer: string; // The correct Japanese word for the blank
+  vocabWord: VocabularyWord; // The full vocabulary word for context
+}
