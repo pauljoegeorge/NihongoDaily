@@ -6,7 +6,7 @@ import { useVocabulary } from '@/hooks/useVocabulary';
 import { useAuth } from '@/context/AuthContext';
 import type { VocabularyWord } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card'; // Added CardDescription
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -227,7 +227,12 @@ export default function FillQuizPage() {
             </p>
           </CardContent>
           <CardFooter className="flex justify-center">
-             <Button onClick={prepareQuiz} size="lg" className="text-lg" disabled={vocabLoading || quizzableWords.length === 0}>
+             <Button 
+                onClick={prepareQuiz} 
+                size="lg" 
+                className="text-lg" 
+                disabled={vocabLoading || quizzableWords.length === 0 || allWords.length < NUM_OPTIONS}
+             >
               {vocabLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ArrowRightCircle className="mr-2 h-5 w-5" />}
               Start Quiz
             </Button>
@@ -352,3 +357,5 @@ export default function FillQuizPage() {
   );
 }
 
+
+    
