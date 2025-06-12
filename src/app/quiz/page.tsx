@@ -8,6 +8,7 @@ import type { VocabularyWord } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea
 import { 
   CheckCircle, 
   HelpCircle, 
@@ -116,8 +117,6 @@ export default function QuizPage() {
     if (selectedWordsForQuiz.length === 0) {
         toast({ title: "Quiz Error", description: "Could not prepare quiz words. Not enough words for the selected scope.", variant: "destructive" });
         setNoDataMessage("Not enough words available for this quiz type. Try adding or learning more.");
-        // If this happens, it implies an issue with previous checks, or words became unlearned.
-        // Revert to a state where the user can re-choose or see the no_data message.
         if (allLearnedWords.length === 0) setQuizState('no_data');
         else setQuizState('choosing_scope');
         return;
@@ -360,7 +359,7 @@ export default function QuizPage() {
       <p className="text-center text-muted-foreground">
         Word {currentWordIndex + 1} of {quizWords.length}
       </p>
-      <Card className="w-full max-w-lg min-h-[420px] shadow-2xl bg-card relative overflow-hidden">
+      <Card className="w-full max-w-lg min-h-[450px] shadow-2xl bg-card relative overflow-hidden"> {/* Increased min-h slightly */}
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d grid grid-cols-1 grid-rows-1 ${isFlipped ? 'rotate-y-180' : ''}`}>
           {/* Front of the Card */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden p-4 text-center">
@@ -391,7 +390,22 @@ export default function QuizPage() {
                   <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
                 </>
               )}
-              <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">Flip Back</Button>
+
+              {/* Example Sentences Section */}
+              {currentWord.exampleSentences && currentWord.exampleSentences.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-border/20 w-full max-w-sm px-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground mb-1 text-left">Example Sentences:</h4>
+                  <ScrollArea className="h-[100px] w-full text-left pr-1">
+                    <ul className="text-xs text-foreground/90 space-y-1">
+                      {currentWord.exampleSentences.map((sentence, index) => (
+                        <li key={index} className="leading-snug">{sentence}</li>
+                      ))}
+                    </ul>
+                  </ScrollArea>
+                </div>
+              )}
+              
+              <Button variant="outline" onClick={handleFlipCard} className="mt-3 mb-2">Flip Back</Button>
             </div>
             <ActionButtons />
           </div>
