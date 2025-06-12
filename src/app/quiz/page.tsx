@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
-  ArrowRightCircle, 
   CheckCircle, 
   HelpCircle, 
   Loader2, 
@@ -18,7 +17,10 @@ import {
   XCircle,
   CalendarDays,
   Shuffle,
-  BookOpenCheck
+  BookOpenCheck,
+  ArrowRightLeft, // For choosing direction
+  NotebookText, // Placeholder for Jp -> En
+  MessageSquareText // Placeholder for En -> Jp
 } from 'lucide-react';
 import Link from 'next/link';
 import { isToday } from 'date-fns';
@@ -26,7 +28,9 @@ import { useToast } from "@/hooks/use-toast";
 
 const MAX_QUIZ_WORDS = 10;
 
-type QuizState = 'loading' | 'choosing_scope' | 'playing' | 'finished' | 'no_data';
+type QuizScope = 'today' | 'random10';
+type QuizDirection = 'jpToEn' | 'enToJp';
+type QuizState = 'loading' | 'choosing_scope' | 'choosing_direction' | 'playing' | 'finished' | 'no_data';
 
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
@@ -49,6 +53,9 @@ export default function QuizPage() {
   const [processingAnswer, setProcessingAnswer] = useState(false);
   const [noDataMessage, setNoDataMessage] = useState<string | null>(null);
 
+  const [currentQuizScope, setCurrentQuizScope] = useState<QuizScope | null>(null);
+  const [currentQuizDirection, setCurrentQuizDirection] = useState<QuizDirection | null>(null);
+
 
   const allLearnedWords = useMemo(() => {
     if (vocabLoading || !allWords) return [];
@@ -64,7 +71,7 @@ export default function QuizPage() {
     if (authLoading || vocabLoading) {
       setQuizState('loading');
     } else if (!user) {
-      setQuizState('loading'); // Sign-in message handled in render
+      setQuizState('loading'); 
     } else if (allWords.length === 0) {
       setNoDataMessage("You haven't added any words to your vocabulary yet. Start by adding some!");
       setQuizState('no_data');
@@ -76,37 +83,48 @@ export default function QuizPage() {
     }
   }, [authLoading, vocabLoading, user, allWords, allLearnedWords]);
 
+  const handleScopeSelected = useCallback((scope: QuizScope) => {
+    let wordsForScope: VocabularyWord[] = [];
+    if (scope === 'today') {
+      wordsForScope = todayLearnedWords;
+    } else {
+      wordsForScope = allLearnedWords;
+    }
 
-  const handlePrepareQuiz = useCallback((scope: 'today' | 'random10') => {
+    if (wordsForScope.length === 0) {
+      toast({
+        title: "No Words for Scope",
+        description: `You have no learned words for the "${scope === 'today' ? 'Today' : 'Random'}" selection.`,
+        variant: "destructive"
+      });
+      return; // Stay in choosing_scope or handle no_data if overall no words
+    }
+    
+    setCurrentQuizScope(scope);
+    setQuizState('choosing_direction');
+  }, [todayLearnedWords, allLearnedWords, toast]);
+  
+  const prepareAndStartActualQuiz = useCallback((scope: QuizScope, direction: QuizDirection) => {
     let selectedWordsForQuiz: VocabularyWord[] = [];
 
     if (scope === 'today') {
-      if (todayLearnedWords.length === 0) {
-        toast({ title: "No learned words from today", description: "Please learn some words added today or choose another option.", variant: "destructive" });
-        setNoDataMessage("No words learned today. Try random words or learn today's vocabulary.");
-        setQuizState('no_data'); // Revert to a state where this message can be shown if choosing_scope isn't suitable
-        return;
-      }
       selectedWordsForQuiz = shuffleArray([...todayLearnedWords]);
     } else { // scope === 'random10'
-      // This check is technically redundant due to useEffect, but good for safety
-      if (allLearnedWords.length === 0) { 
-        toast({ title: "No learned words", description: "Please learn some words first.", variant: "destructive" });
-        setNoDataMessage("No learned words found. Mark some words as 'learned' in your vocabulary.");
-        setQuizState('no_data');
-        return;
-      }
       selectedWordsForQuiz = shuffleArray([...allLearnedWords]).slice(0, MAX_QUIZ_WORDS);
     }
 
     if (selectedWordsForQuiz.length === 0) {
         toast({ title: "Quiz Error", description: "Could not prepare quiz words. Not enough words for the selected scope.", variant: "destructive" });
         setNoDataMessage("Not enough words available for this quiz type. Try adding or learning more.");
-        setQuizState('no_data');
+        // If this happens, it implies an issue with previous checks, or words became unlearned.
+        // Revert to a state where the user can re-choose or see the no_data message.
+        if (allLearnedWords.length === 0) setQuizState('no_data');
+        else setQuizState('choosing_scope');
         return;
     }
 
     setQuizWords(selectedWordsForQuiz);
+    setCurrentQuizDirection(direction);
     setCurrentWordIndex(0);
     setIsFlipped(false);
     setProcessingAnswer(false);
@@ -125,7 +143,7 @@ export default function QuizPage() {
     const currentWord = quizWords[currentWordIndex];
 
     if (!knewIt) {
-      if (currentWord.learned) { // Only toggle if it was marked as learned
+      if (currentWord.learned) { 
          await toggleLearnedStatus(currentWord.id);
       }
     }
@@ -140,7 +158,8 @@ export default function QuizPage() {
   };
 
   const handleRestartQuiz = () => {
-    // Re-evaluate available words when going back to choosing scope
+    setCurrentQuizScope(null);
+    setCurrentQuizDirection(null);
     if (allWords.length === 0) {
       setNoDataMessage("You haven't added any words to your vocabulary yet. Start by adding some!");
       setQuizState('no_data');
@@ -161,7 +180,7 @@ export default function QuizPage() {
     );
   }
 
-  if (!user && quizState !== 'loading') { // Ensure not to show this while initial auth is still loading
+  if (!user && quizState !== 'loading') { 
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Alert className="max-w-md text-center bg-primary/5 border-primary/20 mt-8">
@@ -197,11 +216,11 @@ export default function QuizPage() {
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Card className="w-full max-w-md text-center p-8 shadow-xl bg-card">
           <CardHeader>
-            <CardTitle className="font-headline text-3xl text-primary">Choose Quiz Focus</CardTitle>
+            <CardTitle className="font-headline text-3xl text-primary">Choose Quiz Scope</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
-              onClick={() => handlePrepareQuiz('today')} 
+              onClick={() => handleScopeSelected('today')} 
               size="lg" 
               className="w-full text-lg"
               disabled={todayLearnedWords.length === 0}
@@ -212,18 +231,54 @@ export default function QuizPage() {
             {todayLearnedWords.length === 0 && <p className="text-xs text-muted-foreground">No words learned today.</p>}
             
             <Button 
-              onClick={() => handlePrepareQuiz('random10')} 
+              onClick={() => handleScopeSelected('random10')} 
               size="lg" 
               className="w-full text-lg"
-              disabled={allLearnedWords.length === 0} // Should be covered by quizState logic, but safe
+              disabled={allLearnedWords.length === 0}
             >
               <Shuffle className="mr-2 h-5 w-5" />
               Random {Math.min(MAX_QUIZ_WORDS, allLearnedWords.length)} Learned Words 
               <span className="text-sm ml-1 text-primary-foreground/80"> (from {allLearnedWords.length})</span>
             </Button>
             {allLearnedWords.length > 0 && allLearnedWords.length < MAX_QUIZ_WORDS && <p className="text-xs text-muted-foreground">Fewer than {MAX_QUIZ_WORDS} learned words available.</p>}
-
           </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (quizState === 'choosing_direction' && currentQuizScope) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+        <Card className="w-full max-w-md text-center p-8 shadow-xl bg-card">
+          <CardHeader>
+            <ArrowRightLeft className="h-10 w-10 mx-auto text-primary mb-3" />
+            <CardTitle className="font-headline text-3xl text-primary">Choose Quiz Direction</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+             <p className="text-muted-foreground mb-2">
+                Scope: <span className="font-semibold text-foreground">{currentQuizScope === 'today' ? "Today's Learned Words" : `Random ${Math.min(MAX_QUIZ_WORDS, allLearnedWords.length)} Learned`}</span>
+            </p>
+            <Button 
+              onClick={() => prepareAndStartActualQuiz(currentQuizScope, 'jpToEn')} 
+              size="lg" 
+              className="w-full text-lg"
+            >
+              <NotebookText className="mr-2 h-5 w-5" />
+              Show Japanese, Guess Definition
+            </Button>
+            <Button 
+              onClick={() => prepareAndStartActualQuiz(currentQuizScope, 'enToJp')} 
+              size="lg" 
+              className="w-full text-lg"
+            >
+              <MessageSquareText className="mr-2 h-5 w-5" />
+              Show Definition, Guess Japanese
+            </Button>
+          </CardContent>
+          <CardFooter>
+            <Button variant="link" onClick={() => setQuizState('choosing_scope')}>Back to Scope Selection</Button>
+          </CardFooter>
         </Card>
       </div>
     );
@@ -256,17 +311,16 @@ export default function QuizPage() {
     );
   }
   
-  // Fallback for unexpected states or if quizWords is empty during 'playing'
-  if (quizState !== 'playing' || quizWords.length === 0 || !quizWords[currentWordIndex]) {
+  if (quizState !== 'playing' || quizWords.length === 0 || !quizWords[currentWordIndex] || !currentQuizDirection) {
      return (
        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Alert className="max-w-lg text-center">
           <HelpCircle className="h-8 w-8 mx-auto mb-4" />
-          <AlertTitle className="font-headline text-2xl">Error</AlertTitle>
+          <AlertTitle className="font-headline text-2xl">Error or Loading</AlertTitle>
           <AlertDescription className="mb-4">
-           An unexpected error occurred or no words are available for the quiz. Please try again or <Link href="/" className="underline font-semibold">go back to vocabulary</Link>.
+           Please wait, or if the problem persists, <Link href="/" className="underline font-semibold">go back to vocabulary</Link> and try again.
           </AlertDescription>
-           <Button onClick={handleRestartQuiz} variant="outline">Try Again</Button>
+           <Button onClick={handleRestartQuiz} variant="outline">Restart Quiz Setup</Button>
         </Alert>
       </div>
     );
@@ -274,6 +328,8 @@ export default function QuizPage() {
 
 
   const currentWord = quizWords[currentWordIndex];
+  const isJpToEn = currentQuizDirection === 'jpToEn';
+
   const ActionButtons = () => (
     <div className="flex gap-4 w-full justify-center mt-auto pt-4 border-t border-border/20">
       <Button 
@@ -306,20 +362,35 @@ export default function QuizPage() {
       </p>
       <Card className="w-full max-w-lg min-h-[420px] shadow-2xl bg-card relative overflow-hidden">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d grid grid-cols-1 grid-rows-1 ${isFlipped ? 'rotate-y-180' : ''}`}>
-          {/* Front of the Card: English Definition */}
+          {/* Front of the Card */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden p-4 text-center">
-            <div className="flex-grow flex flex-col items-center justify-center w-full">
-              <p className="text-2xl lg:text-3xl text-foreground mb-6 break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
-              <Button variant="outline" onClick={handleFlipCard}>Reveal Answer</Button>
+            <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3">
+              {isJpToEn ? (
+                <>
+                  <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
+                  <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
+                </>
+              ) : (
+                <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
+              )}
+              <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">
+                {isJpToEn ? "Reveal Definition" : "Reveal Word"}
+              </Button>
             </div>
             <ActionButtons />
           </div>
 
-          {/* Back of the Card: Japanese Word & Romaji */}
+          {/* Back of the Card */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden rotate-y-180 p-4 text-center">
             <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3">
-              <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
-              <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
+              {isJpToEn ? (
+                <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
+              ) : (
+                <>
+                  <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
+                  <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
+                </>
+              )}
               <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">Flip Back</Button>
             </div>
             <ActionButtons />
@@ -335,4 +406,3 @@ export default function QuizPage() {
     </div>
   );
 }
-
