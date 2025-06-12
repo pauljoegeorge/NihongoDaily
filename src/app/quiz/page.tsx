@@ -306,18 +306,20 @@ export default function QuizPage() {
       </p>
       <Card className="w-full max-w-lg min-h-[420px] shadow-2xl bg-card relative overflow-hidden">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d grid grid-cols-1 grid-rows-1 ${isFlipped ? 'rotate-y-180' : ''}`}>
+          {/* Front of the Card: English Definition */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden p-4 text-center">
             <div className="flex-grow flex flex-col items-center justify-center w-full">
-              <p className="font-headline text-5xl text-primary mb-4 break-words max-w-full">{currentWord.japanese}</p>
-              <Button variant="outline" onClick={handleFlipCard}>Flip Card</Button>
+              <p className="text-2xl lg:text-3xl text-foreground mb-6 break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
+              <Button variant="outline" onClick={handleFlipCard}>Reveal Answer</Button>
             </div>
             <ActionButtons />
           </div>
 
+          {/* Back of the Card: Japanese Word & Romaji */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden rotate-y-180 p-4 text-center">
             <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3">
-              <p className="text-2xl text-foreground font-semibold">{currentWord.romaji}</p>
-              <p className="text-lg text-muted-foreground">{currentWord.definition}</p>
+              <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
+              <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
               <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">Flip Back</Button>
             </div>
             <ActionButtons />
@@ -333,3 +335,4 @@ export default function QuizPage() {
     </div>
   );
 }
+
