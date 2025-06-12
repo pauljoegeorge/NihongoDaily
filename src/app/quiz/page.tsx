@@ -8,7 +8,7 @@ import type { VocabularyWord } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea
+// Removed ScrollArea import as it's no longer used
 import { 
   CheckCircle, 
   HelpCircle, 
@@ -19,9 +19,6 @@ import {
   CalendarDays,
   Shuffle,
   BookOpenCheck,
-  ArrowRightLeft, // For choosing direction
-  NotebookText, // Placeholder for Jp -> En
-  MessageSquareText // Placeholder for En -> Jp
 } from 'lucide-react';
 import Link from 'next/link';
 import { isToday } from 'date-fns';
@@ -30,8 +27,8 @@ import { useToast } from "@/hooks/use-toast";
 const MAX_QUIZ_WORDS = 10;
 
 type QuizScope = 'today' | 'random10';
-type QuizDirection = 'jpToEn' | 'enToJp';
-type QuizState = 'loading' | 'choosing_scope' | 'choosing_direction' | 'playing' | 'finished' | 'no_data';
+// Removed QuizDirection type
+type QuizState = 'loading' | 'choosing_scope' | 'playing' | 'finished' | 'no_data'; // Removed 'choosing_direction'
 
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
@@ -55,7 +52,7 @@ export default function QuizPage() {
   const [noDataMessage, setNoDataMessage] = useState<string | null>(null);
 
   const [currentQuizScope, setCurrentQuizScope] = useState<QuizScope | null>(null);
-  const [currentQuizDirection, setCurrentQuizDirection] = useState<QuizDirection | null>(null);
+  // Removed currentQuizDirection state
 
 
   const allLearnedWords = useMemo(() => {
@@ -84,6 +81,7 @@ export default function QuizPage() {
     }
   }, [authLoading, vocabLoading, user, allWords, allLearnedWords]);
 
+  // Simplified handleScopeSelected to directly prepare quiz
   const handleScopeSelected = useCallback((scope: QuizScope) => {
     let wordsForScope: VocabularyWord[] = [];
     if (scope === 'today') {
@@ -98,14 +96,15 @@ export default function QuizPage() {
         description: `You have no learned words for the "${scope === 'today' ? 'Today' : 'Random'}" selection.`,
         variant: "destructive"
       });
-      return; // Stay in choosing_scope or handle no_data if overall no words
+      return; 
     }
     
     setCurrentQuizScope(scope);
-    setQuizState('choosing_direction');
-  }, [todayLearnedWords, allLearnedWords, toast]);
+    prepareAndStartActualQuiz(scope); // Call prepareAndStartActualQuiz directly
+  }, [todayLearnedWords, allLearnedWords, toast]); // Added prepareAndStartActualQuiz to dependencies
   
-  const prepareAndStartActualQuiz = useCallback((scope: QuizScope, direction: QuizDirection) => {
+  // Simplified prepareAndStartActualQuiz, removed direction parameter
+  const prepareAndStartActualQuiz = useCallback((scope: QuizScope) => {
     let selectedWordsForQuiz: VocabularyWord[] = [];
 
     if (scope === 'today') {
@@ -123,7 +122,7 @@ export default function QuizPage() {
     }
 
     setQuizWords(selectedWordsForQuiz);
-    setCurrentQuizDirection(direction);
+    // setCurrentQuizDirection is removed
     setCurrentWordIndex(0);
     setIsFlipped(false);
     setProcessingAnswer(false);
@@ -158,7 +157,7 @@ export default function QuizPage() {
 
   const handleRestartQuiz = () => {
     setCurrentQuizScope(null);
-    setCurrentQuizDirection(null);
+    // setCurrentQuizDirection is removed
     if (allWords.length === 0) {
       setNoDataMessage("You haven't added any words to your vocabulary yet. Start by adding some!");
       setQuizState('no_data');
@@ -246,42 +245,7 @@ export default function QuizPage() {
     );
   }
 
-  if (quizState === 'choosing_direction' && currentQuizScope) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-        <Card className="w-full max-w-md text-center p-8 shadow-xl bg-card">
-          <CardHeader>
-            <ArrowRightLeft className="h-10 w-10 mx-auto text-primary mb-3" />
-            <CardTitle className="font-headline text-3xl text-primary">Choose Quiz Direction</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-             <p className="text-muted-foreground mb-2">
-                Scope: <span className="font-semibold text-foreground">{currentQuizScope === 'today' ? "Today's Learned Words" : `Random ${Math.min(MAX_QUIZ_WORDS, allLearnedWords.length)} Learned`}</span>
-            </p>
-            <Button 
-              onClick={() => prepareAndStartActualQuiz(currentQuizScope, 'jpToEn')} 
-              size="lg" 
-              className="w-full text-lg"
-            >
-              <NotebookText className="mr-2 h-5 w-5" />
-              Show Japanese, Guess Definition
-            </Button>
-            <Button 
-              onClick={() => prepareAndStartActualQuiz(currentQuizScope, 'enToJp')} 
-              size="lg" 
-              className="w-full text-lg"
-            >
-              <MessageSquareText className="mr-2 h-5 w-5" />
-              Show Definition, Guess Japanese
-            </Button>
-          </CardContent>
-          <CardFooter>
-            <Button variant="link" onClick={() => setQuizState('choosing_scope')}>Back to Scope Selection</Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
+  // Removed 'choosing_direction' state UI block
   
 
   if (quizState === 'finished') {
@@ -310,7 +274,8 @@ export default function QuizPage() {
     );
   }
   
-  if (quizState !== 'playing' || quizWords.length === 0 || !quizWords[currentWordIndex] || !currentQuizDirection) {
+  // Simplified condition for playing state
+  if (quizState !== 'playing' || quizWords.length === 0 || !quizWords[currentWordIndex]) {
      return (
        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Alert className="max-w-lg text-center">
@@ -327,7 +292,7 @@ export default function QuizPage() {
 
 
   const currentWord = quizWords[currentWordIndex];
-  const isJpToEn = currentQuizDirection === 'jpToEn';
+  // isJpToEn is no longer needed as it's always this direction
 
   const ActionButtons = () => (
     <div className="flex gap-4 w-full justify-center mt-auto pt-4 border-t border-border/20">
@@ -359,51 +324,26 @@ export default function QuizPage() {
       <p className="text-center text-muted-foreground">
         Word {currentWordIndex + 1} of {quizWords.length}
       </p>
-      <Card className="w-full max-w-lg min-h-[450px] shadow-2xl bg-card relative overflow-hidden"> {/* Increased min-h slightly */}
+      <Card className="w-full max-w-lg min-h-[450px] shadow-2xl bg-card relative overflow-hidden">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d grid grid-cols-1 grid-rows-1 ${isFlipped ? 'rotate-y-180' : ''}`}>
-          {/* Front of the Card */}
+          {/* Front of the Card - Always Japanese word */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden p-4 text-center">
             <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3">
-              {isJpToEn ? (
-                <>
-                  <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
-                  <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
-                </>
-              ) : (
-                <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
-              )}
+              <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
               <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">
-                {isJpToEn ? "Reveal Definition" : "Reveal Word"}
+                Reveal Definition & Reading
               </Button>
             </div>
             <ActionButtons />
           </div>
 
-          {/* Back of the Card */}
+          {/* Back of the Card - Always Romaji and Definition */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden rotate-y-180 p-4 text-center">
             <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3">
-              {isJpToEn ? (
+                <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
                 <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
-              ) : (
-                <>
-                  <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
-                  <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
-                </>
-              )}
-
-              {/* Example Sentences Section */}
-              {currentWord.exampleSentences && currentWord.exampleSentences.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-border/20 w-full max-w-sm px-2">
-                  <h4 className="text-xs font-semibold text-muted-foreground mb-1 text-left">Example Sentences:</h4>
-                  <ScrollArea className="h-[100px] w-full text-left pr-1">
-                    <ul className="text-xs text-foreground/90 space-y-1">
-                      {currentWord.exampleSentences.map((sentence, index) => (
-                        <li key={index} className="leading-snug">{sentence}</li>
-                      ))}
-                    </ul>
-                  </ScrollArea>
-                </div>
-              )}
+              
+              {/* Example Sentences Section REMOVED */}
               
               <Button variant="outline" onClick={handleFlipCard} className="mt-3 mb-2">Flip Back</Button>
             </div>
@@ -420,3 +360,4 @@ export default function QuizPage() {
     </div>
   );
 }
+
