@@ -8,7 +8,7 @@ import type { VocabularyWord } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-// Removed ScrollArea import as it's no longer used
+import { ScrollArea } from '@/components/ui/scroll-area'; // Re-added ScrollArea
 import { 
   CheckCircle, 
   HelpCircle, 
@@ -19,6 +19,7 @@ import {
   CalendarDays,
   Shuffle,
   BookOpenCheck,
+  ListChecks, // Added for example sentences icon
 } from 'lucide-react';
 import Link from 'next/link';
 import { isToday } from 'date-fns';
@@ -27,8 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 const MAX_QUIZ_WORDS = 10;
 
 type QuizScope = 'today' | 'random10';
-// Removed QuizDirection type
-type QuizState = 'loading' | 'choosing_scope' | 'playing' | 'finished' | 'no_data'; // Removed 'choosing_direction'
+type QuizState = 'loading' | 'choosing_scope' | 'playing' | 'finished' | 'no_data';
 
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
@@ -52,7 +52,6 @@ export default function QuizPage() {
   const [noDataMessage, setNoDataMessage] = useState<string | null>(null);
 
   const [currentQuizScope, setCurrentQuizScope] = useState<QuizScope | null>(null);
-  // Removed currentQuizDirection state
 
 
   const allLearnedWords = useMemo(() => {
@@ -81,7 +80,6 @@ export default function QuizPage() {
     }
   }, [authLoading, vocabLoading, user, allWords, allLearnedWords]);
 
-  // Simplified handleScopeSelected to directly prepare quiz
   const handleScopeSelected = useCallback((scope: QuizScope) => {
     let wordsForScope: VocabularyWord[] = [];
     if (scope === 'today') {
@@ -100,10 +98,9 @@ export default function QuizPage() {
     }
     
     setCurrentQuizScope(scope);
-    prepareAndStartActualQuiz(scope); // Call prepareAndStartActualQuiz directly
-  }, [todayLearnedWords, allLearnedWords, toast]); // Added prepareAndStartActualQuiz to dependencies
+    prepareAndStartActualQuiz(scope);
+  }, [todayLearnedWords, allLearnedWords, toast]);
   
-  // Simplified prepareAndStartActualQuiz, removed direction parameter
   const prepareAndStartActualQuiz = useCallback((scope: QuizScope) => {
     let selectedWordsForQuiz: VocabularyWord[] = [];
 
@@ -122,7 +119,6 @@ export default function QuizPage() {
     }
 
     setQuizWords(selectedWordsForQuiz);
-    // setCurrentQuizDirection is removed
     setCurrentWordIndex(0);
     setIsFlipped(false);
     setProcessingAnswer(false);
@@ -157,7 +153,6 @@ export default function QuizPage() {
 
   const handleRestartQuiz = () => {
     setCurrentQuizScope(null);
-    // setCurrentQuizDirection is removed
     if (allWords.length === 0) {
       setNoDataMessage("You haven't added any words to your vocabulary yet. Start by adding some!");
       setQuizState('no_data');
@@ -244,8 +239,6 @@ export default function QuizPage() {
       </div>
     );
   }
-
-  // Removed 'choosing_direction' state UI block
   
 
   if (quizState === 'finished') {
@@ -274,7 +267,6 @@ export default function QuizPage() {
     );
   }
   
-  // Simplified condition for playing state
   if (quizState !== 'playing' || quizWords.length === 0 || !quizWords[currentWordIndex]) {
      return (
        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
@@ -292,7 +284,6 @@ export default function QuizPage() {
 
 
   const currentWord = quizWords[currentWordIndex];
-  // isJpToEn is no longer needed as it's always this direction
 
   const ActionButtons = () => (
     <div className="flex gap-4 w-full justify-center mt-auto pt-4 border-t border-border/20">
@@ -339,11 +330,23 @@ export default function QuizPage() {
 
           {/* Back of the Card - Always Romaji and Definition */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden rotate-y-180 p-4 text-center">
-            <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3">
+            <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3 overflow-y-auto">
                 <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
                 <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
               
-              {/* Example Sentences Section REMOVED */}
+                {currentWord.exampleSentences && currentWord.exampleSentences.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-border/20 w-full max-w-md">
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center justify-center">
+                      <ListChecks className="h-4 w-4 mr-2 text-accent-foreground" />
+                      Example Sentences:
+                    </h4>
+                    <ScrollArea className="h-[100px] text-left text-sm text-muted-foreground p-2 border rounded-md bg-muted/20">
+                      {currentWord.exampleSentences.map((sentence, index) => (
+                        <p key={index} className="mb-1 last:mb-0">{sentence}</p>
+                      ))}
+                    </ScrollArea>
+                  </div>
+                )}
               
               <Button variant="outline" onClick={handleFlipCard} className="mt-3 mb-2">Flip Back</Button>
             </div>
