@@ -81,7 +81,7 @@ export default function FillQuizPage() {
     } else {
       setQuizState('choosing_scope');
     }
-  }, [authLoading, vocabLoading, user, allWords, allQuizzableWords, NUM_OPTIONS]);
+  }, [authLoading, vocabLoading, user, allWords, allQuizzableWords]);
 
 
   const prepareQuiz = useCallback((scope: QuizScope) => {
@@ -110,6 +110,7 @@ export default function FillQuizPage() {
     for (const word of selectedForQuiz) {
       if (!word.exampleSentences || word.exampleSentences.length === 0) continue;
       
+      // Select a random example sentence
       const sentenceIndex = Math.floor(Math.random() * word.exampleSentences.length);
       const originalSentence = word.exampleSentences[sentenceIndex];
       
@@ -137,10 +138,8 @@ export default function FillQuizPage() {
         }
       }
       
-      // This check should be less likely due to the global allWords.length < NUM_OPTIONS check
       if (distractors.length < NUM_OPTIONS - 1) {
           console.warn(`Not enough unique distractors for word "${word.japanese}" for options. Using placeholders.`);
-          // Fallback, though ideally the global check prevents this for real words.
           while(distractors.length < NUM_OPTIONS - 1) distractors.push("選択肢" + (distractors.length + 1)); 
       }
 
@@ -195,7 +194,6 @@ export default function FillQuizPage() {
   };
   
   const handleRestartQuiz = () => {
-    // Re-evaluate conditions to go to choosing_scope or insufficient_data
     if (allWords.length < NUM_OPTIONS || allQuizzableWords.length === 0) {
       setInsufficientDataMessage(
         allWords.length < NUM_OPTIONS 
@@ -279,14 +277,14 @@ export default function FillQuizPage() {
               onClick={() => prepareQuiz('random10')} 
               size="lg" 
               className="w-full text-lg"
-              // This button should be enabled if allQuizzableWords.length > 0,
-              // which is already checked before reaching 'choosing_scope'
+              disabled={numAllQuizzable === 0}
             >
               <Shuffle className="mr-2 h-5 w-5" />
               Random {numRandomToShow} Quizzable
               <span className="text-sm ml-1 text-primary-foreground/80"> (from {numAllQuizzable})</span>
             </Button>
             {numAllQuizzable > 0 && numAllQuizzable < MAX_QUIZ_QUESTIONS && <p className="text-xs text-muted-foreground">Fewer than {MAX_QUIZ_QUESTIONS} quizzable words available in total.</p>}
+             {numAllQuizzable === 0 && <p className="text-xs text-muted-foreground">No words with examples available for random selection.</p>}
           </CardContent>
           <CardFooter className="flex justify-center mt-4">
             <Button asChild variant="outline">
@@ -329,8 +327,6 @@ export default function FillQuizPage() {
   }
   
   if (quizState !== 'playing' || quizQuestions.length === 0 || !quizQuestions[currentQuestionIndex]) {
-    // This case should ideally be covered by 'loading' or 'insufficient_data'
-    // or the transition from 'choosing_scope' to 'playing' failing.
     return (
        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Alert className="max-w-lg text-center">

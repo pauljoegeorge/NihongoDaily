@@ -8,7 +8,7 @@ import type { VocabularyWord } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScrollArea } from '@/components/ui/scroll-area'; // Re-added ScrollArea
+// Removed ScrollArea as we now show only one example
 import { 
   CheckCircle, 
   HelpCircle, 
@@ -19,7 +19,7 @@ import {
   CalendarDays,
   Shuffle,
   BookOpenCheck,
-  ListChecks, // Added for example sentences icon
+  ListChecks,
 } from 'lucide-react';
 import Link from 'next/link';
 import { isToday } from 'date-fns';
@@ -163,6 +163,22 @@ export default function QuizPage() {
       setQuizState('choosing_scope');
     }
   };
+  
+  const currentWord = useMemo(() => {
+    if (quizState === 'playing' && quizWords.length > 0 && quizWords[currentWordIndex]) {
+      return quizWords[currentWordIndex];
+    }
+    return null;
+  }, [quizState, quizWords, currentWordIndex]);
+
+  const displayableExampleSentence = useMemo(() => {
+    if (currentWord && currentWord.exampleSentences && currentWord.exampleSentences.length > 0) {
+      const sentenceIndex = Math.floor(Math.random() * currentWord.exampleSentences.length);
+      return currentWord.exampleSentences[sentenceIndex];
+    }
+    return null;
+  }, [currentWord]);
+
 
   if (quizState === 'loading' || authLoading || (vocabLoading && allWords.length === 0)) {
     return (
@@ -234,6 +250,7 @@ export default function QuizPage() {
               <span className="text-sm ml-1 text-primary-foreground/80"> (from {allLearnedWords.length})</span>
             </Button>
             {allLearnedWords.length > 0 && allLearnedWords.length < MAX_QUIZ_WORDS && <p className="text-xs text-muted-foreground">Fewer than {MAX_QUIZ_WORDS} learned words available.</p>}
+            {allLearnedWords.length === 0 && <p className="text-xs text-muted-foreground">No learned words available for random selection.</p>}
           </CardContent>
         </Card>
       </div>
@@ -267,7 +284,7 @@ export default function QuizPage() {
     );
   }
   
-  if (quizState !== 'playing' || quizWords.length === 0 || !quizWords[currentWordIndex]) {
+  if (quizState !== 'playing' || !currentWord) {
      return (
        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Alert className="max-w-lg text-center">
@@ -281,9 +298,6 @@ export default function QuizPage() {
       </div>
     );
   }
-
-
-  const currentWord = quizWords[currentWordIndex];
 
   const ActionButtons = () => (
     <div className="flex gap-4 w-full justify-center mt-auto pt-4 border-t border-border/20">
@@ -334,19 +348,18 @@ export default function QuizPage() {
                 <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
                 <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
               
-                {currentWord.exampleSentences && currentWord.exampleSentences.length > 0 && (
+                {displayableExampleSentence && (
                   <div className="mt-4 pt-3 border-t border-border/20 w-full max-w-md">
                     <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center justify-center">
                       <ListChecks className="h-4 w-4 mr-2 text-accent-foreground" />
-                      Example Sentences:
+                      Example Sentence:
                     </h4>
-                    <ScrollArea className="h-[100px] text-left text-sm text-muted-foreground p-2 border rounded-md bg-muted/20">
-                      {currentWord.exampleSentences.map((sentence, index) => (
-                        <p key={index} className="mb-1 last:mb-0">{sentence}</p>
-                      ))}
-                    </ScrollArea>
+                    <p className="text-sm text-muted-foreground p-2 border rounded-md bg-muted/20 text-left">
+                      {displayableExampleSentence}
+                    </p>
                   </div>
                 )}
+                 {/* If no examples exist at all for the word, this part won't render due to displayableExampleSentence being null */}
               
               <Button variant="outline" onClick={handleFlipCard} className="mt-3 mb-2">Flip Back</Button>
             </div>
