@@ -119,7 +119,7 @@ export default function FillQuizPage() {
       const blankRegex = new RegExp(escapedWordToBlank, 'gi');
 
       if (!blankRegex.test(originalSentence)) {
-          console.warn(`Word "${wordToBlank}" (trimmed) not found in sentence "${originalSentence}" with regex /${escapedWordToBlank}/gi. Skipping for quiz.`);
+          console.warn(`Word "${wordToBlank}" (ID: ${word.id}, trimmed) not found in sentence "${originalSentence}" with regex /${escapedWordToBlank}/gi. Skipping for quiz.`);
           continue;
       }
       const blankedSentence = originalSentence.replace(blankRegex, "_______");
@@ -139,7 +139,7 @@ export default function FillQuizPage() {
       }
 
       if (distractors.length < NUM_OPTIONS - 1) {
-          console.warn(`Not enough unique distractors for word "${word.japanese}" for options. Using placeholders.`);
+          console.warn(`Not enough unique distractors for word "${word.japanese}" (ID: ${word.id}) for options. Using placeholders.`);
           while(distractors.length < NUM_OPTIONS - 1) distractors.push("選択肢" + (distractors.length + 1));
       }
 
@@ -156,7 +156,7 @@ export default function FillQuizPage() {
     }
 
     if (generatedQuestions.length === 0) {
-        setInsufficientDataMessage("Could not generate any questions from the selected words. This might be because the Japanese words couldn't be found in their example sentences. Please check your example sentences or add more words.");
+        setInsufficientDataMessage("Although words were found for your selected scope, no quiz questions could be created. This often means the exact Japanese word (e.g., '猫') could not be precisely matched within its example sentences (e.g., '可愛い猫ですね'). Please double-check that the Japanese word form you saved is exactly present in its example sentences. Conjugations or particles attached directly to the word might prevent a match.");
         setQuizState('insufficient_data');
         return;
     }
