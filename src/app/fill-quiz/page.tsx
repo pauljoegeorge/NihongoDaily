@@ -112,7 +112,7 @@ export default function FillQuizPage() {
 
       const sentenceIndex = Math.floor(Math.random() * word.exampleSentences.length);
       const fullOriginalSentence = word.exampleSentences[sentenceIndex];
-      let sentenceToUseForBlanking = fullOriginalSentence;
+      let sentenceToUseForBlanking = fullOriginalSentence; // Default to full sentence
 
       // Attempt to extract Japanese part if English seems present
       const jpEndMarkers = ['。', '．', '.']; // Full-width dot, standard dot
@@ -122,32 +122,33 @@ export default function FillQuizPage() {
         // Marker exists, is not at the very start, and there's content after it
         if (markerIndex > 0 && markerIndex < fullOriginalSentence.length - 1) {
           const potentialEnglishPart = fullOriginalSentence.substring(markerIndex + 1).trim();
-          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) {
+          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { // Check if first char is English
             sentenceToUseForBlanking = fullOriginalSentence.substring(0, markerIndex + 1).trim();
             splitFound = true;
-            break; 
+            break;
           }
         }
       }
       
-      if (!splitFound) {
+      if (!splitFound) { // If no period-based split found, try dash
         const dashSeparatorIndex = fullOriginalSentence.indexOf(' - ');
         if (dashSeparatorIndex > 0) {
           const potentialEnglishPart = fullOriginalSentence.substring(dashSeparatorIndex + 3).trim();
-          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) {
+          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { // Check if first char is English
              sentenceToUseForBlanking = fullOriginalSentence.substring(0, dashSeparatorIndex).trim();
              // splitFound = true; // Not strictly needed here as it's the last check
           }
         }
       }
       
-      const wordToBlank = word.japanese.trim();
+      const wordToBlank = word.japanese.trim(); // Trim the word to be blanked
       const escapedWordToBlank = wordToBlank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const blankRegex = new RegExp(escapedWordToBlank, 'gi');
 
+      // Check if the word to blank exists in the (potentially shortened) sentence part
       if (!blankRegex.test(sentenceToUseForBlanking)) {
           console.warn(`Word "${wordToBlank}" (ID: ${word.id}, trimmed) not found in sentence part "${sentenceToUseForBlanking}" (original full: "${fullOriginalSentence}"). Skipping for quiz.`);
-          continue;
+          continue; // Skip this word if it's not found in the sentence part
       }
       const blankedSentence = sentenceToUseForBlanking.replace(blankRegex, "_______");
 
@@ -439,3 +440,5 @@ export default function FillQuizPage() {
     </div>
   );
 }
+
+    

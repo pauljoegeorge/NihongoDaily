@@ -6,7 +6,7 @@ import { useVocabulary } from '@/hooks/useVocabulary';
 import { useAuth } from '@/context/AuthContext';
 import type { VocabularyWord } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   CheckCircle, 
@@ -23,6 +23,8 @@ import {
 import Link from 'next/link';
 import { isToday } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
+// ScrollArea is not used when showing only one random example, but keeping it for future if needed.
+// import { ScrollArea } from '@/components/ui/scroll-area'; 
 
 const MAX_QUIZ_WORDS = 10;
 
@@ -171,18 +173,19 @@ export default function QuizPage() {
   }, [quizState, quizWords, currentWordIndex]);
 
   const displayableExampleParts = useMemo(() => {
-    if (currentWord && currentWord.exampleSentences && currentWord.exampleSentences.length > 0) {
+    if (quizState === 'playing' && currentWord && currentWord.exampleSentences && currentWord.exampleSentences.length > 0) {
       const sentenceIndex = Math.floor(Math.random() * currentWord.exampleSentences.length);
       const fullSentence = currentWord.exampleSentences[sentenceIndex];
       
-      let jpPart = fullSentence;
+      let jpPart = fullSentence; // Default to full sentence
       let enPart = "";
       let splitSuccessful = false;
 
+      // Try splitting by Japanese punctuation followed by English
       const jpEndMarkers = ['。', '．', '.']; // Full-width dot, standard dot
       for (const marker of jpEndMarkers) {
         const markerIndex = fullSentence.indexOf(marker);
-        if (markerIndex > 0 && markerIndex < fullSentence.length - 1) {
+        if (markerIndex > 0 && markerIndex < fullSentence.length - 1) { // Ensure marker is not at start/end
           const potentialEn = fullSentence.substring(markerIndex + 1).trim();
           if (potentialEn.length > 0 && /[a-zA-Z]/.test(potentialEn[0])) { // Check if the first char after trim is English
             jpPart = fullSentence.substring(0, markerIndex + 1).trim();
@@ -193,11 +196,12 @@ export default function QuizPage() {
         }
       }
 
+      // If no period-based split, try " - " separator
       if (!splitSuccessful) {
         const dashSeparatorIndex = fullSentence.indexOf(' - ');
         if (dashSeparatorIndex > 0) {
           const potentialEn = fullSentence.substring(dashSeparatorIndex + 3).trim();
-           if (potentialEn.length > 0 && /[a-zA-Z]/.test(potentialEn[0])) {
+           if (potentialEn.length > 0 && /[a-zA-Z]/.test(potentialEn[0])) { // Check if first char after trim is English
              jpPart = fullSentence.substring(0, dashSeparatorIndex).trim();
              enPart = potentialEn;
              // splitSuccessful = true; // Not strictly needed here
@@ -208,7 +212,7 @@ export default function QuizPage() {
       return { japanese: jpPart, english: enPart };
     }
     return null;
-  }, [currentWord]);
+  }, [currentWord, quizState]);
 
 
   if (quizState === 'loading' || authLoading || (vocabLoading && allWords.length === 0)) {
@@ -362,21 +366,21 @@ export default function QuizPage() {
       </p>
       <Card className="w-full max-w-lg min-h-[450px] shadow-2xl bg-card relative overflow-hidden">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d grid grid-cols-1 grid-rows-1 ${isFlipped ? 'rotate-y-180' : ''}`}>
-          {/* Front of the Card - Always Japanese word */}
+          {/* Front of the Card - Always Japanese word & Romaji */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden p-4 text-center">
             <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3">
               <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
+              <p className="text-xl text-muted-foreground">{currentWord.romaji}</p>
               <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">
-                Reveal Definition & Reading
+                Reveal Definition
               </Button>
             </div>
             <ActionButtons />
           </div>
 
-          {/* Back of the Card - Always Romaji and Definition */}
+          {/* Back of the Card - Always Definition & Examples */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden rotate-y-180 p-4 text-center">
             <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3 overflow-y-auto">
-                <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
                 <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
               
                 {displayableExampleParts && (
@@ -411,3 +415,5 @@ export default function QuizPage() {
     </div>
   );
 }
+
+    
