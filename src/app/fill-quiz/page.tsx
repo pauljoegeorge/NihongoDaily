@@ -70,10 +70,10 @@ export default function FillQuizPage() {
       // Auth check is handled by the main return block for sign-in prompt
       return;
     }
-  
+
     if (allWords.length < NUM_OPTIONS || allQuizzableWords.length === 0) {
       setInsufficientDataMessage(
-        allWords.length < NUM_OPTIONS 
+        allWords.length < NUM_OPTIONS
         ? `You need at least ${NUM_OPTIONS} words in your total vocabulary to generate quiz options. You currently have ${allWords.length}.`
         : "You don't have any words with example sentences. Please add some to enable this quiz."
       );
@@ -99,32 +99,32 @@ export default function FillQuizPage() {
       setQuizState('insufficient_data');
       return;
     }
-    
+
     const shuffledSourceWords = shuffleArray([...sourceWordsForQuiz]);
-    const selectedForQuiz = scope === 'random10' 
-      ? shuffledSourceWords.slice(0, MAX_QUIZ_QUESTIONS) 
+    const selectedForQuiz = scope === 'random10'
+      ? shuffledSourceWords.slice(0, MAX_QUIZ_QUESTIONS)
       : shuffledSourceWords; // Take all for 'today'
 
     const generatedQuestions: FillQuizQuestion[] = [];
 
     for (const word of selectedForQuiz) {
       if (!word.exampleSentences || word.exampleSentences.length === 0) continue;
-      
+
       // Select a random example sentence
       const sentenceIndex = Math.floor(Math.random() * word.exampleSentences.length);
       const originalSentence = word.exampleSentences[sentenceIndex];
-      
-      const wordToBlank = word.japanese;
+
+      const wordToBlank = word.japanese.trim(); // Trim whitespace here
       const escapedWordToBlank = wordToBlank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const blankRegex = new RegExp(escapedWordToBlank, 'gi'); 
-      
-      if (!blankRegex.test(originalSentence)) { 
-          console.warn(`Word "${wordToBlank}" not found in sentence "${originalSentence}" with regex /${escapedWordToBlank}/gi. Skipping for quiz.`);
+      const blankRegex = new RegExp(escapedWordToBlank, 'gi');
+
+      if (!blankRegex.test(originalSentence)) {
+          console.warn(`Word "${wordToBlank}" (trimmed) not found in sentence "${originalSentence}" with regex /${escapedWordToBlank}/gi. Skipping for quiz.`);
           continue;
       }
       const blankedSentence = originalSentence.replace(blankRegex, "_______");
 
-      const correctAnswer = word.japanese;
+      const correctAnswer = word.japanese; // Use original word.japanese for the correct answer
       const distractors: string[] = [];
       const potentialDistractors = shuffleArray(allWords.filter(w => w.id !== word.id));
 
@@ -137,10 +137,10 @@ export default function FillQuizPage() {
           break;
         }
       }
-      
+
       if (distractors.length < NUM_OPTIONS - 1) {
           console.warn(`Not enough unique distractors for word "${word.japanese}" for options. Using placeholders.`);
-          while(distractors.length < NUM_OPTIONS - 1) distractors.push("選択肢" + (distractors.length + 1)); 
+          while(distractors.length < NUM_OPTIONS - 1) distractors.push("選択肢" + (distractors.length + 1));
       }
 
       const options = shuffleArray([correctAnswer, ...distractors]);
@@ -154,10 +154,10 @@ export default function FillQuizPage() {
         vocabWord: word,
       });
     }
-    
+
     if (generatedQuestions.length === 0) {
-        setInsufficientDataMessage("Could not generate any questions from the selected words. Please check your example sentences or add more words.");
-        setQuizState('insufficient_data'); 
+        setInsufficientDataMessage("Could not generate any questions from the selected words. This might be because the Japanese words couldn't be found in their example sentences. Please check your example sentences or add more words.");
+        setQuizState('insufficient_data');
         return;
     }
 
@@ -175,7 +175,7 @@ export default function FillQuizPage() {
 
     const currentQuestion = quizQuestions[currentQuestionIndex];
     const correct = selectedOption === currentQuestion.correctAnswer;
-    
+
     setIsCorrect(correct);
     if (correct) {
       setScore(score + 1);
@@ -192,11 +192,11 @@ export default function FillQuizPage() {
       setQuizState('finished');
     }
   };
-  
+
   const handleRestartQuiz = () => {
     if (allWords.length < NUM_OPTIONS || allQuizzableWords.length === 0) {
       setInsufficientDataMessage(
-        allWords.length < NUM_OPTIONS 
+        allWords.length < NUM_OPTIONS
         ? `You need at least ${NUM_OPTIONS} words in your total vocabulary to generate quiz options. You currently have ${allWords.length}.`
         : "You don't have any words with example sentences. Please add some to enable this quiz."
       );
@@ -228,7 +228,7 @@ export default function FillQuizPage() {
       </div>
     );
   }
-  
+
   if (quizState === 'insufficient_data') {
      return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
@@ -262,29 +262,31 @@ export default function FillQuizPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button 
-              onClick={() => prepareQuiz('today')} 
-              size="lg" 
+            <Button
+              onClick={() => prepareQuiz('today')}
+              size="lg"
               className="w-full text-lg"
-              disabled={numTodayQuizzable === 0}
+              disabled={numTodayQuizzable === 0 || allWords.length < NUM_OPTIONS}
             >
               <CalendarDays className="mr-2 h-5 w-5" />
               Today's Quizzable Words ({numTodayQuizzable})
             </Button>
             {numTodayQuizzable === 0 && <p className="text-xs text-muted-foreground">No words with examples added today.</p>}
-            
-            <Button 
-              onClick={() => prepareQuiz('random10')} 
-              size="lg" 
+            {allWords.length < NUM_OPTIONS && numTodayQuizzable > 0 && <p className="text-xs text-muted-foreground">Requires at least {NUM_OPTIONS} total words in vocab.</p>}
+
+            <Button
+              onClick={() => prepareQuiz('random10')}
+              size="lg"
               className="w-full text-lg"
-              disabled={numAllQuizzable === 0}
+              disabled={numAllQuizzable === 0 || allWords.length < NUM_OPTIONS}
             >
               <Shuffle className="mr-2 h-5 w-5" />
               Random {numRandomToShow} Quizzable
               <span className="text-sm ml-1 text-primary-foreground/80"> (from {numAllQuizzable})</span>
             </Button>
             {numAllQuizzable > 0 && numAllQuizzable < MAX_QUIZ_QUESTIONS && <p className="text-xs text-muted-foreground">Fewer than {MAX_QUIZ_QUESTIONS} quizzable words available in total.</p>}
-             {numAllQuizzable === 0 && <p className="text-xs text-muted-foreground">No words with examples available for random selection.</p>}
+            {numAllQuizzable === 0 && <p className="text-xs text-muted-foreground">No words with examples available for random selection.</p>}
+            {allWords.length < NUM_OPTIONS && numAllQuizzable > 0 && <p className="text-xs text-muted-foreground">Requires at least {NUM_OPTIONS} total words in vocab.</p>}
           </CardContent>
           <CardFooter className="flex justify-center mt-4">
             <Button asChild variant="outline">
@@ -325,7 +327,7 @@ export default function FillQuizPage() {
       </div>
     );
   }
-  
+
   if (quizState !== 'playing' || quizQuestions.length === 0 || !quizQuestions[currentQuestionIndex]) {
     return (
        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
@@ -347,7 +349,7 @@ export default function FillQuizPage() {
       <p className="text-lg text-muted-foreground">
         Question {currentQuestionIndex + 1} of {quizQuestions.length} | Score: {score}
       </p>
-      
+
       <Card className="w-full shadow-xl bg-card p-6">
         <CardHeader className="text-center pb-4">
           <CardTitle className="text-xl lg:text-2xl font-normal text-foreground leading-relaxed">
@@ -365,8 +367,8 @@ export default function FillQuizPage() {
             disabled={showFeedback}
           >
             {currentQ.options.map((option, index) => (
-              <Label 
-                key={index} 
+              <Label
+                key={index}
                 htmlFor={`option-${index}`}
                 className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-all
                   ${selectedOption === option ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border hover:bg-muted/50'}
