@@ -8,7 +8,6 @@ import type { VocabularyWord } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-// Removed ScrollArea as we now show only one example
 import { 
   CheckCircle, 
   HelpCircle, 
@@ -171,10 +170,42 @@ export default function QuizPage() {
     return null;
   }, [quizState, quizWords, currentWordIndex]);
 
-  const displayableExampleSentence = useMemo(() => {
+  const displayableExampleParts = useMemo(() => {
     if (currentWord && currentWord.exampleSentences && currentWord.exampleSentences.length > 0) {
       const sentenceIndex = Math.floor(Math.random() * currentWord.exampleSentences.length);
-      return currentWord.exampleSentences[sentenceIndex];
+      const fullSentence = currentWord.exampleSentences[sentenceIndex];
+      
+      let jpPart = fullSentence;
+      let enPart = "";
+      let splitSuccessful = false;
+
+      const jpEndMarkers = ['。', '．', '.']; // Full-width dot, standard dot
+      for (const marker of jpEndMarkers) {
+        const markerIndex = fullSentence.indexOf(marker);
+        if (markerIndex > 0 && markerIndex < fullSentence.length - 1) {
+          const potentialEn = fullSentence.substring(markerIndex + 1).trim();
+          if (potentialEn.length > 0 && /[a-zA-Z]/.test(potentialEn[0])) { // Check if the first char after trim is English
+            jpPart = fullSentence.substring(0, markerIndex + 1).trim();
+            enPart = potentialEn;
+            splitSuccessful = true;
+            break;
+          }
+        }
+      }
+
+      if (!splitSuccessful) {
+        const dashSeparatorIndex = fullSentence.indexOf(' - ');
+        if (dashSeparatorIndex > 0) {
+          const potentialEn = fullSentence.substring(dashSeparatorIndex + 3).trim();
+           if (potentialEn.length > 0 && /[a-zA-Z]/.test(potentialEn[0])) {
+             jpPart = fullSentence.substring(0, dashSeparatorIndex).trim();
+             enPart = potentialEn;
+             // splitSuccessful = true; // Not strictly needed here
+           }
+        }
+      }
+      
+      return { japanese: jpPart, english: enPart };
     }
     return null;
   }, [currentWord]);
@@ -348,18 +379,22 @@ export default function QuizPage() {
                 <p className="text-2xl text-muted-foreground font-semibold">{currentWord.romaji}</p>
                 <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
               
-                {displayableExampleSentence && (
+                {displayableExampleParts && (
                   <div className="mt-4 pt-3 border-t border-border/20 w-full max-w-md">
                     <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center justify-center">
                       <ListChecks className="h-4 w-4 mr-2 text-accent-foreground" />
                       Example Sentence:
                     </h4>
-                    <p className="text-sm text-muted-foreground p-2 border rounded-md bg-muted/20 text-left">
-                      {displayableExampleSentence}
+                    <p className="text-sm text-muted-foreground p-2 border rounded-md bg-muted/20 text-left mb-1">
+                      {displayableExampleParts.japanese}
                     </p>
+                    {displayableExampleParts.english && (
+                      <p className="text-xs text-muted-foreground/80 p-2 border rounded-md bg-muted/10 text-left mt-1">
+                        <span className="font-semibold">EN:</span> {displayableExampleParts.english}
+                      </p>
+                    )}
                   </div>
                 )}
-                 {/* If no examples exist at all for the word, this part won't render due to displayableExampleSentence being null */}
               
               <Button variant="outline" onClick={handleFlipCard} className="mt-3 mb-2">Flip Back</Button>
             </div>
@@ -376,4 +411,3 @@ export default function QuizPage() {
     </div>
   );
 }
-

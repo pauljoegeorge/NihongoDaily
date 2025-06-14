@@ -22,7 +22,7 @@ type QuizState = 'loading' | 'choosing_scope' | 'playing' | 'finished' | 'insuff
 
 interface FillQuizQuestion {
   id: string; // vocab word ID
-  originalSentence: string;
+  originalSentence: string; // Should be the Japanese part used for blanking
   blankedSentence: string;
   options: string[]; // Japanese words
   correctAnswer: string; // Japanese word
@@ -103,28 +103,55 @@ export default function FillQuizPage() {
     const shuffledSourceWords = shuffleArray([...sourceWordsForQuiz]);
     const selectedForQuiz = scope === 'random10'
       ? shuffledSourceWords.slice(0, MAX_QUIZ_QUESTIONS)
-      : shuffledSourceWords; // Take all for 'today'
+      : shuffledSourceWords; 
 
     const generatedQuestions: FillQuizQuestion[] = [];
 
     for (const word of selectedForQuiz) {
       if (!word.exampleSentences || word.exampleSentences.length === 0) continue;
 
-      // Select a random example sentence
       const sentenceIndex = Math.floor(Math.random() * word.exampleSentences.length);
-      const originalSentence = word.exampleSentences[sentenceIndex];
+      const fullOriginalSentence = word.exampleSentences[sentenceIndex];
+      let sentenceToUseForBlanking = fullOriginalSentence;
 
-      const wordToBlank = word.japanese.trim(); // Trim whitespace here
+      // Attempt to extract Japanese part if English seems present
+      const jpEndMarkers = ['。', '．', '.']; // Full-width dot, standard dot
+      let splitFound = false;
+      for (const marker of jpEndMarkers) {
+        const markerIndex = fullOriginalSentence.indexOf(marker);
+        // Marker exists, is not at the very start, and there's content after it
+        if (markerIndex > 0 && markerIndex < fullOriginalSentence.length - 1) {
+          const potentialEnglishPart = fullOriginalSentence.substring(markerIndex + 1).trim();
+          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) {
+            sentenceToUseForBlanking = fullOriginalSentence.substring(0, markerIndex + 1).trim();
+            splitFound = true;
+            break; 
+          }
+        }
+      }
+      
+      if (!splitFound) {
+        const dashSeparatorIndex = fullOriginalSentence.indexOf(' - ');
+        if (dashSeparatorIndex > 0) {
+          const potentialEnglishPart = fullOriginalSentence.substring(dashSeparatorIndex + 3).trim();
+          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) {
+             sentenceToUseForBlanking = fullOriginalSentence.substring(0, dashSeparatorIndex).trim();
+             // splitFound = true; // Not strictly needed here as it's the last check
+          }
+        }
+      }
+      
+      const wordToBlank = word.japanese.trim();
       const escapedWordToBlank = wordToBlank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const blankRegex = new RegExp(escapedWordToBlank, 'gi');
 
-      if (!blankRegex.test(originalSentence)) {
-          console.warn(`Word "${wordToBlank}" (ID: ${word.id}, trimmed) not found in sentence "${originalSentence}" with regex /${escapedWordToBlank}/gi. Skipping for quiz.`);
+      if (!blankRegex.test(sentenceToUseForBlanking)) {
+          console.warn(`Word "${wordToBlank}" (ID: ${word.id}, trimmed) not found in sentence part "${sentenceToUseForBlanking}" (original full: "${fullOriginalSentence}"). Skipping for quiz.`);
           continue;
       }
-      const blankedSentence = originalSentence.replace(blankRegex, "_______");
+      const blankedSentence = sentenceToUseForBlanking.replace(blankRegex, "_______");
 
-      const correctAnswer = word.japanese; // Use original word.japanese for the correct answer
+      const correctAnswer = word.japanese;
       const distractors: string[] = [];
       const potentialDistractors = shuffleArray(allWords.filter(w => w.id !== word.id));
 
@@ -147,7 +174,7 @@ export default function FillQuizPage() {
 
       generatedQuestions.push({
         id: word.id,
-        originalSentence,
+        originalSentence: sentenceToUseForBlanking, // This is now potentially just the Japanese part
         blankedSentence,
         options,
         correctAnswer,
@@ -156,7 +183,7 @@ export default function FillQuizPage() {
     }
 
     if (generatedQuestions.length === 0) {
-        setInsufficientDataMessage("Although words were found for your selected scope, no quiz questions could be created. This often means the exact Japanese word (e.g., '猫') could not be precisely matched within its example sentences (e.g., '可愛い猫ですね'). Please double-check that the Japanese word form you saved is exactly present in its example sentences. Conjugations or particles attached directly to the word might prevent a match.");
+        setInsufficientDataMessage("Although words were found for your selected scope, no quiz questions could be created. This often means the exact Japanese word (e.g., '猫') could not be precisely matched within its example sentences (e.g., '可愛い猫ですね'), or the Japanese part of the sentence could not be isolated from a combined Japanese/English example. Please double-check that the Japanese word form you saved is exactly present in its example sentences and try to keep Japanese examples separate from their English translations if possible.");
         setQuizState('insufficient_data');
         return;
     }
@@ -412,4 +439,3 @@ export default function FillQuizPage() {
     </div>
   );
 }
-
