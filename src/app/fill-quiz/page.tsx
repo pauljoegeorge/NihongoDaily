@@ -190,7 +190,7 @@ export default function FillQuizPage() {
         break; // Successfully generated a question for this word, move to the next word
       }
       if (!questionGeneratedForThisWord) {
-         console.warn(`Word "${word.japanese.trim()}" (ID: ${word.id}) could not be used for a question. None of its example sentences worked after trimming the word.`);
+         console.warn(`Word "${word.japanese.trim()}" (ID: ${word.id}) could not be used for a question. None of its example sentences worked after trimming the word or attempting to split Japanese/English.`);
       }
     }
 
