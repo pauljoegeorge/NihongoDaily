@@ -106,7 +106,7 @@ export default function FillQuizPage() {
     if (scope === 'random10') {
       maxQuestionsToGenerate = Math.min(MAX_QUIZ_QUESTIONS, sourceWordsForQuizPool.length);
     } else { // scope === 'today'
-      maxQuestionsToGenerate = sourceWordsForQuizPool.length;
+      maxQuestionsToGenerate = sourceWordsForQuizPool.length; // Use all today's words
     }
 
     for (const word of shuffledSourceWords) {
@@ -115,75 +115,85 @@ export default function FillQuizPage() {
       }
 
       if (!word.exampleSentences || word.exampleSentences.length === 0) continue;
+      
+      let questionGeneratedForThisWord = false;
+      const shuffledExampleSentences = shuffleArray([...word.exampleSentences]); // Try examples in random order
 
-      const sentenceIndex = Math.floor(Math.random() * word.exampleSentences.length);
-      const fullOriginalSentence = word.exampleSentences[sentenceIndex];
-      let sentenceToUseForBlanking = fullOriginalSentence; 
+      for (const fullOriginalSentence of shuffledExampleSentences) {
+        let sentenceToUseForBlanking = fullOriginalSentence; 
 
-      const jpEndMarkers = ['。', '．', '.']; 
-      let splitFound = false;
-      for (const marker of jpEndMarkers) {
-        const markerIndex = fullOriginalSentence.indexOf(marker);
-        if (markerIndex > 0 && markerIndex < fullOriginalSentence.length - 1) {
-          const potentialEnglishPart = fullOriginalSentence.substring(markerIndex + 1).trim();
-          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { 
-            sentenceToUseForBlanking = fullOriginalSentence.substring(0, markerIndex + 1).trim();
-            splitFound = true;
+        const jpEndMarkers = ['。', '．', '.']; 
+        let splitFound = false;
+        for (const marker of jpEndMarkers) {
+          const markerIndex = fullOriginalSentence.indexOf(marker);
+          if (markerIndex > 0 && markerIndex < fullOriginalSentence.length - 1) {
+            const potentialEnglishPart = fullOriginalSentence.substring(markerIndex + 1).trim();
+            if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { 
+              sentenceToUseForBlanking = fullOriginalSentence.substring(0, markerIndex + 1).trim();
+              splitFound = true;
+              break;
+            }
+          }
+        }
+        
+        if (!splitFound) {
+          const dashSeparatorIndex = fullOriginalSentence.indexOf(' - ');
+          if (dashSeparatorIndex > 0) {
+            const potentialEnglishPart = fullOriginalSentence.substring(dashSeparatorIndex + 3).trim();
+            if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { 
+               sentenceToUseForBlanking = fullOriginalSentence.substring(0, dashSeparatorIndex).trim();
+            }
+          }
+        }
+        
+        const wordToBlank = word.japanese.trim(); 
+        const escapedWordToBlank = wordToBlank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const blankRegex = new RegExp(escapedWordToBlank, 'gi');
+
+        if (!blankRegex.test(sentenceToUseForBlanking)) {
+            // console.warn(`Word "${wordToBlank}" (ID: ${word.id}, trimmed) not found in THIS example sentence part "${sentenceToUseForBlanking}". Original full: "${fullOriginalSentence}". Trying next example if any.`);
+            continue; // Try next example sentence for this word
+        }
+        const blankedSentence = sentenceToUseForBlanking.replace(blankRegex, "_______");
+
+        const correctAnswer = word.japanese;
+        const distractors: string[] = [];
+        const potentialDistractors = shuffleArray(allWords.filter(w => w.id !== word.id));
+
+        for (const distractorWord of potentialDistractors) {
+          if (distractors.length < NUM_OPTIONS - 1) {
+            if (distractorWord.japanese !== correctAnswer && !distractors.includes(distractorWord.japanese)) {
+              distractors.push(distractorWord.japanese);
+            }
+          } else {
             break;
           }
         }
-      }
-      
-      if (!splitFound) {
-        const dashSeparatorIndex = fullOriginalSentence.indexOf(' - ');
-        if (dashSeparatorIndex > 0) {
-          const potentialEnglishPart = fullOriginalSentence.substring(dashSeparatorIndex + 3).trim();
-          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { 
-             sentenceToUseForBlanking = fullOriginalSentence.substring(0, dashSeparatorIndex).trim();
-          }
-        }
-      }
-      
-      const wordToBlank = word.japanese.trim(); 
-      const escapedWordToBlank = wordToBlank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const blankRegex = new RegExp(escapedWordToBlank, 'gi');
 
-      if (!blankRegex.test(sentenceToUseForBlanking)) {
-          console.warn(`Word "${wordToBlank}" (ID: ${word.id}, trimmed) not found in sentence part "${sentenceToUseForBlanking}" (original full: "${fullOriginalSentence}"). Skipping for quiz.`);
-          continue; 
-      }
-      const blankedSentence = sentenceToUseForBlanking.replace(blankRegex, "_______");
-
-      const correctAnswer = word.japanese;
-      const distractors: string[] = [];
-      const potentialDistractors = shuffleArray(allWords.filter(w => w.id !== word.id));
-
-      for (const distractorWord of potentialDistractors) {
         if (distractors.length < NUM_OPTIONS - 1) {
-          if (distractorWord.japanese !== correctAnswer && !distractors.includes(distractorWord.japanese)) {
-            distractors.push(distractorWord.japanese);
-          }
-        } else {
-          break;
+            // console.warn(`Not enough unique distractors for word "${word.japanese}" (ID: ${word.id}) for options. Using placeholders.`);
+            // This scenario is less critical if we successfully generate a question.
+            while(distractors.length < NUM_OPTIONS - 1) distractors.push("選択肢" + (distractors.length + 1));
         }
+
+        const options = shuffleArray([correctAnswer, ...distractors]);
+
+        generatedQuestions.push({
+          id: word.id,
+          originalSentence: sentenceToUseForBlanking, 
+          blankedSentence,
+          options,
+          correctAnswer,
+          vocabWord: word,
+        });
+        questionGeneratedForThisWord = true;
+        break; // Successfully generated a question for this word, move to the next word
       }
-
-      if (distractors.length < NUM_OPTIONS - 1) {
-          console.warn(`Not enough unique distractors for word "${word.japanese}" (ID: ${word.id}) for options. Using placeholders.`);
-          while(distractors.length < NUM_OPTIONS - 1) distractors.push("選択肢" + (distractors.length + 1));
+      if (!questionGeneratedForThisWord) {
+         console.warn(`Word "${word.japanese.trim()}" (ID: ${word.id}) could not be used for a question. None of its example sentences worked after trimming the word.`);
       }
-
-      const options = shuffleArray([correctAnswer, ...distractors]);
-
-      generatedQuestions.push({
-        id: word.id,
-        originalSentence: sentenceToUseForBlanking, 
-        blankedSentence,
-        options,
-        correctAnswer,
-        vocabWord: word,
-      });
     }
+
 
     if (generatedQuestions.length === 0) {
         setInsufficientDataMessage("Although words were found for your selected scope, no quiz questions could be created. This often means the exact Japanese word (e.g., '猫') could not be precisely matched within its example sentences (e.g., '可愛い猫ですね'), or the Japanese part of the sentence could not be isolated from a combined Japanese/English example. Please double-check that the Japanese word form you saved is exactly present in its example sentences and try to keep Japanese examples separate from their English translations if possible.");
@@ -311,7 +321,7 @@ export default function FillQuizPage() {
               disabled={numAllQuizzable === 0 || allWords.length < NUM_OPTIONS}
             >
               <Shuffle className="mr-2 h-5 w-5" />
-              Random {numRandomToShow} Quizzable
+              Random {numRandomToShow > 0 ? Math.min(numRandomToShow, MAX_QUIZ_QUESTIONS) : 0} Quizzable
               <span className="text-sm ml-1 text-primary-foreground/80"> (from {numAllQuizzable})</span>
             </Button>
             {numAllQuizzable > 0 && numAllQuizzable < MAX_QUIZ_QUESTIONS && <p className="text-xs text-muted-foreground">Fewer than {MAX_QUIZ_QUESTIONS} quizzable words available in total for the target of {MAX_QUIZ_QUESTIONS}.</p>}
