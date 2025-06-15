@@ -93,12 +93,12 @@ export function useKanji() {
 
       if ((errorCode === 'failed-precondition' || (typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('index')))) {
         title = "Firestore Indexing Error (Kanji)";
-        let detailedDescription = `A required Firestore index is missing or not yet built for the 'kanjiEntries' collection. `;
+        let detailedDescription = `A required Firestore index is missing or not yet built for the 'kanjiEntries' collection. Fields needed: userId (Ascending) AND createdAt (Descending). `;
         const createIndexUrlMatch = typeof errorMessage === 'string' ? errorMessage.match(/(https?:\/\/[^\s]*console\.firebase\.google\.com[^\s]*)/) : null;
         if (createIndexUrlMatch && createIndexUrlMatch[0]) {
-          detailedDescription += `Firestore suggests creating it here: ${createIndexUrlMatch[0]}. Ensure your index fields are: userId (Ascending) AND createdAt (Descending).`;
+          detailedDescription += `Firestore suggests creating it here: ${createIndexUrlMatch[0]}.`;
         } else {
-           detailedDescription += `Please check your browser's developer console for a direct link from Firestore to create the required index. Ensure your index fields are: userId (Ascending) AND createdAt (Descending).`;
+           detailedDescription += `Please check your browser's developer console for a direct link from Firestore to create the required index.`;
         }
         description = detailedDescription;
       } else if (errorCode === 'permission-denied' || (typeof errorMessage === 'string' && (errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')))) {
@@ -119,7 +119,7 @@ export function useKanji() {
         title: title,
         description: description,
         variant: "destructive",
-        duration: 30000,
+        duration: 30000, // Longer duration for important errors like indexing
       });
     });
 
@@ -147,10 +147,12 @@ export function useKanji() {
     try {
       const docRef = await addDoc(collection(db, 'kanjiEntries'), newKanjiData);
       toast({ title: "Kanji Added", description: `Kanji "${newKanjiData.kanji}" added successfully.` });
+      // Construct the KanjiEntry to return, approximating the timestamp
+      const { createdAt, ...restOfData } = newKanjiData; // separate serverTimestamp
       return {
         id: docRef.id,
-        ...newKanjiData,
-        createdAt: Date.now(), 
+        ...restOfData, // spread the rest of the data
+        createdAt: Date.now(), // Use current client time as an approximation
       } as KanjiEntry;
     } catch (error: any) {
       console.error("Error adding Kanji:", error);
@@ -181,6 +183,7 @@ export function useKanji() {
         onyomiExamplesText: formData.onyomiExamplesText || '',
         kunyomiExamplesText: formData.kunyomiExamplesText || '',
         usageExampleSentences: formData.usageExampleSentences ? formData.usageExampleSentences.split('\n').map(s => s.trim()).filter(s => s) : [],
+        // Note: createdAt is not updated here as it's a creation timestamp
       };
 
       await updateDoc(kanjiRef, updatedKanjiData);
@@ -200,7 +203,7 @@ export function useKanji() {
     const kanjiRef = doc(db, 'kanjiEntries', kanjiId);
     try {
       const docSnap = await getDoc(kanjiRef);
-      const kanjiChar = docSnap.exists() ? docSnap.data().kanji : "Kanji";
+      const kanjiChar = docSnap.exists() ? docSnap.data().kanji : "Kanji"; // Get char before delete
       if (docSnap.exists() && docSnap.data().userId !== user.uid) {
          toast({ title: "Error", description: "Cannot delete this Kanji (permission).", variant: "destructive" });
          return;
