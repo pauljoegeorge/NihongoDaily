@@ -1,8 +1,15 @@
 
-import { Cherry, BookMarked, LayoutDashboard, FileQuestion, BookText } from 'lucide-react';
+import { Cherry, BookMarked, LayoutDashboard, FileQuestion, BookText, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import SignInButton from '@/components/auth/SignInButton';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
   return (
@@ -19,18 +26,36 @@ export default function Header() {
             <LayoutDashboard className="h-5 w-5" />
             Dashboard
           </Link>
-          <Link href="/quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-2 py-2 rounded-md transition-colors">
-            <BookMarked className="h-5 w-5" />
-            Flashcards
-          </Link>
-          <Link href="/fill-quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-2 py-2 rounded-md transition-colors">
-            <FileQuestion className="h-5 w-5" />
-            Fill Quiz
-          </Link>
-          <Link href="/kanji" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-2 py-2 rounded-md transition-colors">
-            <BookText className="h-5 w-5" />
-            Kanji
-          </Link>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-2 py-2 rounded-md transition-colors hover:bg-primary/5 focus-visible:ring-0">
+                Study Tools
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card border-border shadow-lg">
+              <DropdownMenuItem asChild className="cursor-pointer hover:bg-primary/10">
+                <Link href="/quiz" className="flex items-center gap-2 text-primary w-full">
+                  <BookMarked className="h-5 w-5" />
+                  Flashcards
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer hover:bg-primary/10">
+                <Link href="/fill-quiz" className="flex items-center gap-2 text-primary w-full">
+                  <FileQuestion className="h-5 w-5" />
+                  Fill Quiz
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer hover:bg-primary/10">
+                <Link href="/kanji" className="flex items-center gap-2 text-primary w-full">
+                  <BookText className="h-5 w-5" />
+                  Kanji
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <ThemeSwitcher />
           <SignInButton />
         </div>
