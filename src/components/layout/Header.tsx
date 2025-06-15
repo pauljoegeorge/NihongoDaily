@@ -1,5 +1,5 @@
 
-import { Cherry, BookMarked, LayoutDashboard, FileQuestion, BookText } from 'lucide-react'; // Added BookText for Kanji
+import { Cherry, BookMarked, LayoutDashboard, FileQuestion, BookText } from 'lucide-react';
 import Link from 'next/link';
 import SignInButton from '@/components/auth/SignInButton';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
@@ -15,19 +15,19 @@ export default function Header() {
           </h1>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
+          <Link href="/dashboard" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-2 py-2 rounded-md transition-colors">
             <LayoutDashboard className="h-5 w-5" />
             Dashboard
           </Link>
-          <Link href="/quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
+          <Link href="/quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-2 py-2 rounded-md transition-colors">
             <BookMarked className="h-5 w-5" />
             Flashcards
           </Link>
-          <Link href="/fill-quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
+          <Link href="/fill-quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-2 py-2 rounded-md transition-colors">
             <FileQuestion className="h-5 w-5" />
             Fill Quiz
           </Link>
-          <Link href="/kanji" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
+          <Link href="/kanji" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-2 py-2 rounded-md transition-colors">
             <BookText className="h-5 w-5" />
             Kanji
           </Link>
