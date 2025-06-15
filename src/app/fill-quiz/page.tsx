@@ -67,7 +67,6 @@ export default function FillQuizPage() {
       return;
     }
     if (!user) {
-      // Auth check is handled by the main return block for sign-in prompt
       return;
     }
 
@@ -86,43 +85,48 @@ export default function FillQuizPage() {
 
   const prepareQuiz = useCallback((scope: QuizScope) => {
     setCurrentQuizScope(scope);
-    let sourceWordsForQuiz: VocabularyWord[];
+    let sourceWordsForQuizPool: VocabularyWord[];
 
     if (scope === 'today') {
-      sourceWordsForQuiz = todayQuizzableWords;
+      sourceWordsForQuizPool = todayQuizzableWords;
     } else { // scope === 'random10'
-      sourceWordsForQuiz = allQuizzableWords;
+      sourceWordsForQuizPool = allQuizzableWords;
     }
 
-    if (sourceWordsForQuiz.length === 0) {
+    if (sourceWordsForQuizPool.length === 0) {
       setInsufficientDataMessage(`No words available for the "${scope === 'today' ? 'Today' : 'Random'}" selection. Please add more or ensure they have example sentences.`);
       setQuizState('insufficient_data');
       return;
     }
 
-    const shuffledSourceWords = shuffleArray([...sourceWordsForQuiz]);
-    const selectedForQuiz = scope === 'random10'
-      ? shuffledSourceWords.slice(0, MAX_QUIZ_QUESTIONS)
-      : shuffledSourceWords; 
-
+    const shuffledSourceWords = shuffleArray([...sourceWordsForQuizPool]);
     const generatedQuestions: FillQuizQuestion[] = [];
+    
+    let maxQuestionsToGenerate: number;
+    if (scope === 'random10') {
+      maxQuestionsToGenerate = Math.min(MAX_QUIZ_QUESTIONS, sourceWordsForQuizPool.length);
+    } else { // scope === 'today'
+      maxQuestionsToGenerate = sourceWordsForQuizPool.length;
+    }
 
-    for (const word of selectedForQuiz) {
+    for (const word of shuffledSourceWords) {
+      if (generatedQuestions.length >= maxQuestionsToGenerate) {
+        break; 
+      }
+
       if (!word.exampleSentences || word.exampleSentences.length === 0) continue;
 
       const sentenceIndex = Math.floor(Math.random() * word.exampleSentences.length);
       const fullOriginalSentence = word.exampleSentences[sentenceIndex];
-      let sentenceToUseForBlanking = fullOriginalSentence; // Default to full sentence
+      let sentenceToUseForBlanking = fullOriginalSentence; 
 
-      // Attempt to extract Japanese part if English seems present
-      const jpEndMarkers = ['。', '．', '.']; // Full-width dot, standard dot
+      const jpEndMarkers = ['。', '．', '.']; 
       let splitFound = false;
       for (const marker of jpEndMarkers) {
         const markerIndex = fullOriginalSentence.indexOf(marker);
-        // Marker exists, is not at the very start, and there's content after it
         if (markerIndex > 0 && markerIndex < fullOriginalSentence.length - 1) {
           const potentialEnglishPart = fullOriginalSentence.substring(markerIndex + 1).trim();
-          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { // Check if first char is English
+          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { 
             sentenceToUseForBlanking = fullOriginalSentence.substring(0, markerIndex + 1).trim();
             splitFound = true;
             break;
@@ -130,25 +134,23 @@ export default function FillQuizPage() {
         }
       }
       
-      if (!splitFound) { // If no period-based split found, try dash
+      if (!splitFound) {
         const dashSeparatorIndex = fullOriginalSentence.indexOf(' - ');
         if (dashSeparatorIndex > 0) {
           const potentialEnglishPart = fullOriginalSentence.substring(dashSeparatorIndex + 3).trim();
-          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { // Check if first char is English
+          if (potentialEnglishPart.length > 0 && /[a-zA-Z]/.test(potentialEnglishPart[0])) { 
              sentenceToUseForBlanking = fullOriginalSentence.substring(0, dashSeparatorIndex).trim();
-             // splitFound = true; // Not strictly needed here as it's the last check
           }
         }
       }
       
-      const wordToBlank = word.japanese.trim(); // Trim the word to be blanked
+      const wordToBlank = word.japanese.trim(); 
       const escapedWordToBlank = wordToBlank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const blankRegex = new RegExp(escapedWordToBlank, 'gi');
 
-      // Check if the word to blank exists in the (potentially shortened) sentence part
       if (!blankRegex.test(sentenceToUseForBlanking)) {
           console.warn(`Word "${wordToBlank}" (ID: ${word.id}, trimmed) not found in sentence part "${sentenceToUseForBlanking}" (original full: "${fullOriginalSentence}"). Skipping for quiz.`);
-          continue; // Skip this word if it's not found in the sentence part
+          continue; 
       }
       const blankedSentence = sentenceToUseForBlanking.replace(blankRegex, "_______");
 
@@ -175,7 +177,7 @@ export default function FillQuizPage() {
 
       generatedQuestions.push({
         id: word.id,
-        originalSentence: sentenceToUseForBlanking, // This is now potentially just the Japanese part
+        originalSentence: sentenceToUseForBlanking, 
         blankedSentence,
         options,
         correctAnswer,
@@ -312,7 +314,7 @@ export default function FillQuizPage() {
               Random {numRandomToShow} Quizzable
               <span className="text-sm ml-1 text-primary-foreground/80"> (from {numAllQuizzable})</span>
             </Button>
-            {numAllQuizzable > 0 && numAllQuizzable < MAX_QUIZ_QUESTIONS && <p className="text-xs text-muted-foreground">Fewer than {MAX_QUIZ_QUESTIONS} quizzable words available in total.</p>}
+            {numAllQuizzable > 0 && numAllQuizzable < MAX_QUIZ_QUESTIONS && <p className="text-xs text-muted-foreground">Fewer than {MAX_QUIZ_QUESTIONS} quizzable words available in total for the target of {MAX_QUIZ_QUESTIONS}.</p>}
             {numAllQuizzable === 0 && <p className="text-xs text-muted-foreground">No words with examples available for random selection.</p>}
             {allWords.length < NUM_OPTIONS && numAllQuizzable > 0 && <p className="text-xs text-muted-foreground">Requires at least {NUM_OPTIONS} total words in vocab.</p>}
           </CardContent>
@@ -440,5 +442,4 @@ export default function FillQuizPage() {
     </div>
   );
 }
-
     
