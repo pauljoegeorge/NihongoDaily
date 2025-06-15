@@ -1,5 +1,5 @@
 
-import { Cherry, BookMarked, LayoutDashboard, FileQuestion } from 'lucide-react'; // Added LayoutDashboard, FileQuestion icons
+import { Cherry, BookMarked, LayoutDashboard, FileQuestion, BookText } from 'lucide-react'; // Added BookText for Kanji
 import Link from 'next/link';
 import SignInButton from '@/components/auth/SignInButton';
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher';
@@ -26,6 +26,10 @@ export default function Header() {
           <Link href="/fill-quiz" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
             <FileQuestion className="h-5 w-5" />
             Fill Quiz
+          </Link>
+          <Link href="/kanji" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors">
+            <BookText className="h-5 w-5" />
+            Kanji
           </Link>
           <ThemeSwitcher />
           <SignInButton />

@@ -34,3 +34,35 @@ export interface FillQuizQuestion {
   correctAnswer: string; // The correct Japanese word for the blank
   vocabWord: VocabularyWord; // The full vocabulary word for context
 }
+
+// --- Kanji Types ---
+export interface KanjiExampleWord { // For more structured examples in the future
+  word: string;
+  reading: string;
+  meaning: string;
+}
+
+export interface KanjiEntry {
+  id: string;
+  kanji: string;
+  meaning: string;
+  onyomi: string[];
+  kunyomi: string[];
+  onyomiExamplesText: string; // Raw text from textarea for On'yomi example words/phrases
+  kunyomiExamplesText: string; // Raw text from textarea for Kun'yomi example words/phrases
+  usageExampleSentences: string[]; // For general usage example sentences of the Kanji
+  createdAt: number; // Timestamp (milliseconds since epoch)
+  userId: string; // To associate with a user
+}
+
+export interface FirestoreKanjiEntry {
+  kanji: string;
+  meaning: string;
+  onyomi: string[];
+  kunyomi: string[];
+  onyomiExamplesText: string;
+  kunyomiExamplesText: string;
+  usageExampleSentences: string[];
+  createdAt: any; // Firestore ServerTimestamp or Timestamp
+  userId: string;
+}
