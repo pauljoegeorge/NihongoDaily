@@ -82,15 +82,45 @@ export function useKanji() {
       });
       setKanjiList(fetchedKanji);
       setLoading(false);
-    }, (error) => {
-      console.error("Error fetching Kanji list:", error);
-      toast({
-        title: "Error Fetching Kanji",
-        description: "Could not fetch your Kanji list. Please check console for details.",
-        variant: "destructive",
-        duration: 10000,
-      });
+    }, (error: any) => {
+      console.error("[DIAGNOSTIC] Full Firestore Error object in useKanji onSnapshot listener:", error);
+      const errorCode = error.code || 'N/A';
+      const errorMessage = error.message || 'No specific message';
+      
       setLoading(false);
+      let title = "Error Fetching Kanji";
+      let description = `Could not fetch your Kanji list. Code: ${errorCode}. Message: ${errorMessage}.`;
+
+      if ((errorCode === 'failed-precondition' || (typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('index')))) {
+        title = "Firestore Indexing Error (Kanji)";
+        let detailedDescription = `A required Firestore index is missing or not yet built for the 'kanjiEntries' collection. `;
+        const createIndexUrlMatch = typeof errorMessage === 'string' ? errorMessage.match(/(https?:\/\/[^\s]*console\.firebase\.google\.com[^\s]*)/) : null;
+        if (createIndexUrlMatch && createIndexUrlMatch[0]) {
+          detailedDescription += `Firestore suggests creating it here: ${createIndexUrlMatch[0]}. Ensure your index fields are: userId (Ascending) AND createdAt (Descending).`;
+        } else {
+           detailedDescription += `Please check your browser's developer console for a direct link from Firestore to create the required index. Ensure your index fields are: userId (Ascending) AND createdAt (Descending).`;
+        }
+        description = detailedDescription;
+      } else if (errorCode === 'permission-denied' || (typeof errorMessage === 'string' && (errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')))) {
+        title = "Permission Denied (Kanji)";
+        description = `You don't have permission to read Kanji entries. Please check your Firestore security rules.`;
+      } else if (error.name === 'FirebaseError' && error.code === 'cancelled') {
+        console.warn("[DIAGNOSTIC] Kanji Firestore onSnapshot listener was cancelled.");
+        return; 
+      } else if (error.name === 'FirebaseError' && error.code === 'unimplemented') {
+        title = "Operation Not Supported (Kanji)";
+        description = "The query operation is not supported. " + errorMessage;
+      } else {
+        title = `Firestore Error (${errorCode}) - Kanji`;
+        description = `An unexpected error occurred while fetching Kanji: ${errorMessage}`;
+      }
+      
+      toast({
+        title: title,
+        description: description,
+        variant: "destructive",
+        duration: 30000,
+      });
     });
 
     return () => unsubscribe();
@@ -117,12 +147,10 @@ export function useKanji() {
     try {
       const docRef = await addDoc(collection(db, 'kanjiEntries'), newKanjiData);
       toast({ title: "Kanji Added", description: `Kanji "${newKanjiData.kanji}" added successfully.` });
-      // For immediate UI update, construct and return the client-side object
-      // Note: createdAt will be an estimate until listener picks up actual server timestamp
       return {
         id: docRef.id,
         ...newKanjiData,
-        createdAt: Date.now(), // Estimate
+        createdAt: Date.now(), 
       } as KanjiEntry;
     } catch (error: any) {
       console.error("Error adding Kanji:", error);
