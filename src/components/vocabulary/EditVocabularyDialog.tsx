@@ -119,12 +119,7 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[425px] bg-card">
         <DialogHeader>
-          <div className="flex justify-between items-center">
-            <DialogTitle className="font-headline text-2xl text-primary">Edit Vocabulary Word</DialogTitle>
-            <Button variant="ghost" size="icon" onClick={handleCopyToClipboard} type="button" aria-label="Copy word details">
-              <Copy className="h-5 w-5 text-primary hover:text-primary/80" />
-            </Button>
-          </div>
+          <DialogTitle className="font-headline text-2xl text-primary">Edit Vocabulary Word</DialogTitle>
           <DialogDescription>
             Update the details for the Japanese word: <strong className="text-primary">{wordToEdit?.japanese}</strong>
           </DialogDescription>
@@ -209,7 +204,20 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            
+            <div className="pt-2"> 
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleCopyToClipboard} 
+                className="w-full"
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Word Details
+              </Button>
+            </div>
+
+            <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
