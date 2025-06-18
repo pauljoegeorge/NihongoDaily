@@ -6,7 +6,7 @@ import type { VocabularyWord } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, XCircle, BarChart3, ChevronDown, Edit3 } from 'lucide-react';
+import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, XCircle, BarChart3, ChevronDown, Edit3, Copy } from 'lucide-react'; // Added Copy
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '../ui/separator';
 import {
@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import EditVocabularyDialog, { type EditFormData } from './EditVocabularyDialog';
+import { useToast } from "@/hooks/use-toast"; // Added useToast
 
 interface VocabularyCardProps {
   word: VocabularyWord;
@@ -27,6 +28,7 @@ interface VocabularyCardProps {
 
 export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpdateDifficulty, onUpdateWord }: VocabularyCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { toast } = useToast(); // Initialize toast
 
   const getDifficultyBadgeVariant = (difficulty: 'easy' | 'medium' | 'hard' | undefined) => {
     switch (difficulty) {
@@ -40,12 +42,37 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
         return 'outline';
     }
   };
+
+  const handleCopyToClipboard = async () => {
+    let textToCopy = `Word: ${word.japanese}\n`;
+    textToCopy += `Reading: ${word.romaji}\n`;
+    textToCopy += `Meaning: ${word.definition}\n`;
+
+    if (word.exampleSentences && word.exampleSentences.length > 0) {
+      textToCopy += `Usage:\n${word.exampleSentences.join('\n')}`;
+    }
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      toast({
+        title: "Copied!",
+        description: "Word details copied to clipboard.",
+      });
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy details to clipboard. Check browser permissions.",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <>
       <Card className={`transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl ${word.learned ? 'bg-primary/5 border-primary/30' : 'bg-card'}`}>
-        <CardHeader> {/* Removed pb-3 to use default p-6 padding */}
-          <div className="flex justify-between items-center"> {/* Changed items-start to items-center */}
+        <CardHeader>
+          <div className="flex justify-between items-center">
             <div>
               <CardTitle className="font-headline text-3xl text-primary flex items-center">
                 {word.japanese}
@@ -76,10 +103,10 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
               
               {!word.learned && (
                 <Button
-                  variant="outline" // Changed to outline for visibility debugging
+                  variant="outline" 
                   size="icon" 
                   onClick={() => onToggleLearned(word.id)}
-                  className="text-green-500 hover:text-green-600 hover:bg-green-500/10 border-green-500" // Added border color for outline
+                  className="text-green-500 hover:text-green-600 hover:bg-green-500/10 border-green-500" 
                   aria-label="Mark as Learned"
                   title="Mark as Learned"
                 >
@@ -88,10 +115,10 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
               )}
               {word.learned && (
                 <Button
-                  variant="outline" // Changed to outline for visibility debugging
+                  variant="outline" 
                   size="icon" 
                   onClick={() => onToggleLearned(word.id)}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500" // Added border color for outline
+                  className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500" 
                   aria-label="Mark as Unlearned"
                   title="Mark as Unlearned"
                 >
@@ -101,7 +128,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 pt-4"> {/* Added pt-4 for more space below header */}
+        <CardContent className="space-y-4 pt-4">
           <div className="flex items-center gap-2 text-foreground">
             <BookOpen className="h-5 w-5 text-accent-foreground" />
             <p>{word.definition}</p>
@@ -145,13 +172,17 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
           </Accordion>
         </CardContent>
         <CardFooter className="flex justify-between items-center pt-4">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs font-mono">
+          <div className="flex items-center gap-1"> {/* Reduced gap for tighter icon group */}
+            <Badge variant="outline" className="text-xs font-mono mr-1"> {/* Added mr-1 for spacing */}
               Added: {new Date(word.createdAt).toLocaleDateString()}
             </Badge>
             <Button variant="ghost" size="icon" onClick={() => setIsEditDialogOpen(true)} className="text-foreground/70 hover:text-primary h-7 w-7">
               <Edit3 className="h-4 w-4" />
               <span className="sr-only">Edit word</span>
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleCopyToClipboard} className="text-foreground/70 hover:text-primary h-7 w-7">
+              <Copy className="h-4 w-4" />
+              <span className="sr-only">Copy word details</span>
             </Button>
           </div>
           <Button variant="ghost" size="sm" onClick={() => onDelete(word.id)} className="text-destructive hover:text-destructive/80">

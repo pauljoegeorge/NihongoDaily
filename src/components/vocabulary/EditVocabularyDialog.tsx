@@ -15,9 +15,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Kept for consistency, though FormLabel is used more
+// Label import is not directly used, FormLabel is preferred from react-hook-form context
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Copy } from 'lucide-react'; // Added Copy icon
+import { Loader2 } from 'lucide-react'; 
 import type { VocabularyWord, Difficulty } from '@/types';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -28,11 +28,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast"; // Added useToast
+// useToast is removed as copy function is moved out
 
 const difficultyLevels = z.enum(['easy', 'medium', 'hard']);
 
-// Form schema for editing a word (same as adding)
 const formSchema = z.object({
   japanese: z.string().min(1, 'Japanese word is required.'),
   romaji: z.string().min(1, 'Reading is required.'),
@@ -52,11 +51,9 @@ interface EditVocabularyDialogProps {
 
 export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, onUpdateWord }: EditVocabularyDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast(); // Initialize toast
 
   const form = useForm<EditFormData>({
     resolver: zodResolver(formSchema),
-    // Default values will be set by useEffect based on wordToEdit
   });
 
   useEffect(() => {
@@ -71,45 +68,13 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
     }
   }, [wordToEdit, isOpen, form]);
 
-  const handleCopyToClipboard = async () => {
-    const values = form.getValues();
-    let textToCopy = `Word: ${values.japanese}\n`;
-    textToCopy += `Reading: ${values.romaji}\n`;
-    textToCopy += `Meaning: ${values.definition}\n`;
-
-    const exampleSentencesArray = values.exampleSentences
-      ? values.exampleSentences.split('\n').map(s => s.trim()).filter(s => s.length > 0)
-      : [];
-
-    if (exampleSentencesArray.length > 0) {
-      textToCopy += `Usage:\n${exampleSentencesArray.join('\n')}`;
-    }
-
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      toast({
-        title: "Copied!",
-        description: "Word details copied to clipboard.",
-      });
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
-      toast({
-        title: "Copy Failed",
-        description: "Could not copy details to clipboard. Check browser permissions.",
-        variant: "destructive",
-      });
-    }
-  };
-
-
   const onSubmit = async (values: EditFormData) => {
     setIsSubmitting(true);
     try {
       await onUpdateWord(wordToEdit.id, values);
-      setIsOpen(false); // Close dialog on successful update
+      setIsOpen(false); 
     } catch (error) {
       console.error("Error updating word:", error);
-      // Toast for error is handled in useVocabulary hook or onUpdateWord implementation
     } finally {
       setIsSubmitting(false);
     }
@@ -187,7 +152,7 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      value={field.value} // Ensure value is controlled
+                      value={field.value} 
                       className="flex space-x-4"
                     >
                       {(['easy', 'medium', 'hard'] as Difficulty[]).map((level) => (
@@ -205,17 +170,7 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
               )}
             />
             
-            <div className="pt-2"> 
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleCopyToClipboard} 
-                className="w-full"
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Copy Word Details
-              </Button>
-            </div>
+            {/* Copy button removed from here */}
 
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
