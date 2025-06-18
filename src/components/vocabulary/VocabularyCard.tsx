@@ -6,7 +6,7 @@ import type { VocabularyWord } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, XCircle, BarChart3, ChevronDown, Edit3, Copy } from 'lucide-react';
+import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, MinusCircle, BarChart3, ChevronDown, Edit3, Copy } from 'lucide-react'; // Changed XCircle to MinusCircle
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '../ui/separator';
 import {
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import EditVocabularyDialog, { type EditFormData } from './EditVocabularyDialog';
 import { useToast } from "@/hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip imports
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface VocabularyCardProps {
   word: VocabularyWord;
@@ -131,7 +131,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
                         className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500" 
                         aria-label="Mark as Unlearned"
                       >
-                        <XCircle className="h-6 w-6" />
+                        <MinusCircle className="h-6 w-6" /> 
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
