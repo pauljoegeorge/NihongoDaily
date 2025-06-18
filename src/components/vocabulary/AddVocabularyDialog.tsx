@@ -102,7 +102,7 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
           </DialogDescription>
         </DialogHeader>
         <Form {...form}> {/* Wrap form content with Form provider */}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
             <div>
               <Label htmlFor="japanese" className="text-foreground">Japanese Word</Label>
               <Input
