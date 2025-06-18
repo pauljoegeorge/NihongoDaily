@@ -15,9 +15,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Kept for consistency, though FormLabel is used more
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Copy } from 'lucide-react'; // Added Copy icon
 import type { VocabularyWord, Difficulty } from '@/types';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -28,6 +28,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast"; // Added useToast
 
 const difficultyLevels = z.enum(['easy', 'medium', 'hard']);
 
@@ -51,6 +52,7 @@ interface EditVocabularyDialogProps {
 
 export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, onUpdateWord }: EditVocabularyDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast(); // Initialize toast
 
   const form = useForm<EditFormData>({
     resolver: zodResolver(formSchema),
@@ -69,6 +71,37 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
     }
   }, [wordToEdit, isOpen, form]);
 
+  const handleCopyToClipboard = async () => {
+    const values = form.getValues();
+    let textToCopy = `Word: ${values.japanese}\n`;
+    textToCopy += `Reading: ${values.romaji}\n`;
+    textToCopy += `Meaning: ${values.definition}\n`;
+
+    const exampleSentencesArray = values.exampleSentences
+      ? values.exampleSentences.split('\n').map(s => s.trim()).filter(s => s.length > 0)
+      : [];
+
+    if (exampleSentencesArray.length > 0) {
+      textToCopy += `Usage:\n${exampleSentencesArray.join('\n')}`;
+    }
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      toast({
+        title: "Copied!",
+        description: "Word details copied to clipboard.",
+      });
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy details to clipboard. Check browser permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   const onSubmit = async (values: EditFormData) => {
     setIsSubmitting(true);
     try {
@@ -86,7 +119,12 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[425px] bg-card">
         <DialogHeader>
-          <DialogTitle className="font-headline text-2xl text-primary">Edit Vocabulary Word</DialogTitle>
+          <div className="flex justify-between items-center">
+            <DialogTitle className="font-headline text-2xl text-primary">Edit Vocabulary Word</DialogTitle>
+            <Button variant="ghost" size="icon" onClick={handleCopyToClipboard} type="button" aria-label="Copy word details">
+              <Copy className="h-5 w-5 text-primary hover:text-primary/80" />
+            </Button>
+          </div>
           <DialogDescription>
             Update the details for the Japanese word: <strong className="text-primary">{wordToEdit?.japanese}</strong>
           </DialogDescription>
