@@ -6,7 +6,7 @@ import type { VocabularyWord } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, XCircle, BarChart3, ChevronDown, Edit3, Copy } from 'lucide-react'; // Added Copy
+import { BookOpen, Languages, ListChecks, Trash2, CheckCircle2, XCircle, BarChart3, ChevronDown, Edit3, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '../ui/separator';
 import {
@@ -16,7 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import EditVocabularyDialog, { type EditFormData } from './EditVocabularyDialog';
-import { useToast } from "@/hooks/use-toast"; // Added useToast
+import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip imports
 
 interface VocabularyCardProps {
   word: VocabularyWord;
@@ -28,7 +29,7 @@ interface VocabularyCardProps {
 
 export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpdateDifficulty, onUpdateWord }: VocabularyCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const { toast } = useToast(); // Initialize toast
+  const { toast } = useToast();
 
   const getDifficultyBadgeVariant = (difficulty: 'easy' | 'medium' | 'hard' | undefined) => {
     switch (difficulty) {
@@ -79,53 +80,67 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
                 {word.learned && <CheckCircle2 className="ml-2 h-6 w-6 text-green-500" />}
               </CardTitle>
             </div>
-            <div className="flex items-center space-x-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className={`capitalize text-xs px-2 py-1 h-auto ${getDifficultyBadgeVariant(word.difficulty)}`}>
-                    <BarChart3 className="h-3 w-3 mr-1" />
-                    {word.difficulty || 'Set Difficulty'}
-                    <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onUpdateDifficulty(word.id, 'easy')}>
-                    Easy
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onUpdateDifficulty(word.id, 'medium')}>
-                    Medium
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onUpdateDifficulty(word.id, 'hard')}>
-                    Hard
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              {!word.learned && (
-                <Button
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => onToggleLearned(word.id)}
-                  className="text-green-500 hover:text-green-600 hover:bg-green-500/10 border-green-500" 
-                  aria-label="Mark as Learned"
-                  title="Mark as Learned"
-                >
-                  <CheckCircle2 className="h-6 w-6" />
-                </Button>
-              )}
-              {word.learned && (
-                <Button
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => onToggleLearned(word.id)}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500" 
-                  aria-label="Mark as Unlearned"
-                  title="Mark as Unlearned"
-                >
-                  <XCircle className="h-6 w-6" />
-                </Button>
-              )}
-            </div>
+            <TooltipProvider delayDuration={100}>
+              <div className="flex items-center space-x-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className={`capitalize text-xs px-2 py-1 h-auto ${getDifficultyBadgeVariant(word.difficulty)}`}>
+                      <BarChart3 className="h-3 w-3 mr-1" />
+                      {word.difficulty || 'Set Difficulty'}
+                      <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onUpdateDifficulty(word.id, 'easy')}>
+                      Easy
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onUpdateDifficulty(word.id, 'medium')}>
+                      Medium
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onUpdateDifficulty(word.id, 'hard')}>
+                      Hard
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                {!word.learned && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => onToggleLearned(word.id)}
+                        className="text-green-500 hover:text-green-600 hover:bg-green-500/10 border-green-500" 
+                        aria-label="Mark as Learned"
+                      >
+                        <CheckCircle2 className="h-6 w-6" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Mark as Learned</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {word.learned && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => onToggleLearned(word.id)}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500" 
+                        aria-label="Mark as Unlearned"
+                      >
+                        <XCircle className="h-6 w-6" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Mark as Unlearned</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </TooltipProvider>
           </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
@@ -172,8 +187,8 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
           </Accordion>
         </CardContent>
         <CardFooter className="flex justify-between items-center pt-4">
-          <div className="flex items-center gap-1"> {/* Reduced gap for tighter icon group */}
-            <Badge variant="outline" className="text-xs font-mono mr-1"> {/* Added mr-1 for spacing */}
+          <div className="flex items-center gap-1">
+            <Badge variant="outline" className="text-xs font-mono mr-1">
               Added: {new Date(word.createdAt).toLocaleDateString()}
             </Badge>
             <Button variant="ghost" size="icon" onClick={() => setIsEditDialogOpen(true)} className="text-foreground/70 hover:text-primary h-7 w-7">
