@@ -28,7 +28,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-// useToast is removed as copy function is moved out
 
 const difficultyLevels = z.enum(['easy', 'medium', 'hard']);
 
@@ -90,7 +89,8 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
+          {/* Removed max-h-[70vh], overflow-y-auto, and pr-4 from the form's className */}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
             <FormField
               control={form.control}
               name="japanese"
@@ -170,8 +170,6 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
               )}
             />
             
-            {/* Copy button removed from here */}
-
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
                 Cancel
