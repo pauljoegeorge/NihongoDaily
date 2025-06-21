@@ -100,7 +100,7 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4 pl-1">
             <FormField
               control={form.control}
               name="japanese"

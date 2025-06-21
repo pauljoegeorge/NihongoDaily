@@ -81,7 +81,7 @@ export default function AddKanjiDialog({ onAddKanji }: AddKanjiDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 py-3 max-h-[70vh] overflow-y-auto pr-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 py-3 max-h-[70vh] overflow-y-auto pr-4 pl-1">
             <FormField
               control={form.control}
               name="kanji"
