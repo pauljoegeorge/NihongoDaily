@@ -26,6 +26,7 @@ import {
   onSnapshot,
   getDoc
 } from 'firebase/firestore';
+import * as z from 'zod';
 
 // Define FormData type used by Add/Edit dialogs
 // This should ideally be in types/forms.ts or similar if it grows
@@ -37,7 +38,6 @@ const formSchema = z.object({
   exampleSentences: z.string().optional(),
   difficulty: difficultyLevels.default('medium'),
 });
-import * as z from 'zod';
 export type VocabularyFormDataType = z.infer<typeof formSchema>;
 
 
