@@ -13,7 +13,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { format, isToday, isYesterday, parseISO, compareDesc } from 'date-fns';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import Link from 'next/link';
 
 type LearnedStatusFilter = 'all' | 'learned' | 'unlearned';
 
@@ -159,6 +160,18 @@ export default function Home() {
               Sign in with Google
             </Button>
           </CardContent>
+          <CardFooter className="flex justify-center pt-6">
+             <p className="px-8 text-center text-sm text-muted-foreground">
+              By clicking continue, you agree to our{" "}
+              <Link
+                href="/privacy"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </CardFooter>
         </Card>
       </div>
     );
