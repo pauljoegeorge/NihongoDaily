@@ -138,18 +138,24 @@ export default function QuizPage() {
     const currentWord = quizWords[currentWordIndex];
 
     if (!knewIt) {
-      if (currentWord.learned) { 
-         await toggleLearnedStatus(currentWord.id);
+      if (currentWord.learned) {
+        await toggleLearnedStatus(currentWord.id);
       }
     }
 
-    if (currentWordIndex < quizWords.length - 1) {
-      setIsFlipped(false);
-      setCurrentWordIndex(currentWordIndex + 1);
-    } else {
-      setQuizState('finished');
-    }
-    setProcessingAnswer(false);
+    // Immediately start the flip-back animation
+    setIsFlipped(false);
+
+    // Use a short timeout to allow the animation to start before changing the card's content
+    setTimeout(() => {
+      if (currentWordIndex < quizWords.length - 1) {
+        setCurrentWordIndex(currentWordIndex + 1);
+      } else {
+        setQuizState('finished');
+      }
+      // The processing state ends after the next card is ready
+      setProcessingAnswer(false);
+    }, 200); // 200ms delay to prevent content flicker during flip animation
   };
 
   const handleRestartQuiz = () => {
