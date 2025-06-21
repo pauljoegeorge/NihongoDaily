@@ -371,7 +371,7 @@ export default function QuizPage() {
       <p className="text-center text-muted-foreground">
         Word {currentWordIndex + 1} of {quizWords.length}
       </p>
-      <Card className="w-full max-w-lg min-h-[450px] shadow-2xl bg-card relative overflow-hidden">
+      <Card className="w-full max-w-lg min-h-[450px] shadow-2xl bg-card relative overflow-hidden flex flex-col">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d grid grid-cols-1 grid-rows-1 ${isFlipped ? 'rotate-y-180' : ''}`}>
           {/* Front of the Card - Always Japanese word & Romaji */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col backface-hidden p-4">
