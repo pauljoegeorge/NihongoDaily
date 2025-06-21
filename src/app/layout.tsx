@@ -17,8 +17,8 @@ const InitialThemeScript = () => {
       if (theme && theme !== 'default') {
         document.documentElement.setAttribute('data-theme', theme);
       } else if (!theme) {
-        // Optional: set a default theme if nothing is in localStorage
-        // document.documentElement.setAttribute('data-theme', 'default'); 
+        // Set 'forest-calm' as the default theme if nothing is in localStorage
+        document.documentElement.setAttribute('data-theme', 'forest-calm'); 
       }
     })();
   `.trim();

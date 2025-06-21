@@ -23,7 +23,7 @@ const LOCAL_STORAGE_KEY = "nihongo-daily-theme";
 
 export function ThemeSwitcher() {
   const [mounted, setMounted] = React.useState(false);
-  const [activeTheme, setActiveTheme] = React.useState("default");
+  const [activeTheme, setActiveTheme] = React.useState("forest-calm");
 
   React.useEffect(() => {
     setMounted(true);
