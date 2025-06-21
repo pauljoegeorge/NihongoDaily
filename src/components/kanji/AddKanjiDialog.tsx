@@ -66,8 +66,8 @@ export default function AddKanjiDialog({ onAddKanji }: AddKanjiDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="fixed bottom-8 right-8 rounded-full shadow-lg p-4 h-16 w-16  md:h-14 md:w-auto md:px-6 md:py-3">
-          <PlusCircle className="h-8 w-8 md:h-5 md:w-5 md:mr-2" />
+        <Button className="fixed bottom-8 right-8 rounded-full shadow-lg h-14 w-14 md:w-auto md:px-6 md:py-3">
+          <PlusCircle className="h-6 w-6 md:mr-2" />
           <span className="hidden md:inline">Add Kanji</span>
         </Button>
       </DialogTrigger>

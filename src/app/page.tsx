@@ -241,7 +241,8 @@ export default function Home() {
           className="transition-all duration-150 ease-in-out"
         >
           <Shuffle className="h-4 w-4 mr-1" />
-          {isTodayRandomized ? "Unshuffle Today" : "Shuffle Today's Words"}
+          <span className="hidden sm:inline">{isTodayRandomized ? "Unshuffle Today" : "Shuffle Today's Words"}</span>
+          <span className="sm:hidden">{isTodayRandomized ? "Unshuffle" : "Shuffle"}</span>
         </Button>
       </div>
 
