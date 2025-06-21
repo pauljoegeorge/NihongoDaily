@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { useAuth } from '@/context/AuthContext';
-import type { VocabularyWord } from '@/types';
+import type { VocabularyWord, DifficultyFilter } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,16 +20,15 @@ import {
   BookOpenCheck,
   ListChecks,
   MinusCircle,
+  Check,
 } from 'lucide-react';
 import Link from 'next/link';
 import { isToday } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
-// ScrollArea is not used when showing only one random example, but keeping it for future if needed.
-// import { ScrollArea } from '@/components/ui/scroll-area'; 
+import { Separator } from '@/components/ui/separator';
 
-const MAX_QUIZ_WORDS = 10;
+const MAX_QUIZ_WORDS = 10; // This constant is no longer used for slicing but kept for reference
 
-type QuizScope = 'today' | 'random10';
 type QuizState = 'loading' | 'choosing_scope' | 'playing' | 'finished' | 'no_data';
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -40,6 +39,13 @@ function shuffleArray<T>(array: T[]): T[] {
   }
   return newArray;
 }
+
+const difficultyFilters: { label: string; value: DifficultyFilter }[] = [
+  { label: 'All', value: 'all' },
+  { label: 'Easy', value: 'easy' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'Hard', value: 'hard' },
+];
 
 export default function QuizPage() {
   const { user, loading: authLoading } = useAuth();
@@ -52,9 +58,7 @@ export default function QuizPage() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [processingAnswer, setProcessingAnswer] = useState(false);
   const [noDataMessage, setNoDataMessage] = useState<string | null>(null);
-
-  const [currentQuizScope, setCurrentQuizScope] = useState<QuizScope | null>(null);
-
+  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
 
   const allLearnedWords = useMemo(() => {
     if (vocabLoading || !allWords) return [];
@@ -65,6 +69,13 @@ export default function QuizPage() {
     if (vocabLoading || !allWords) return [];
     return allWords.filter(word => word.learned && isToday(new Date(word.createdAt)));
   }, [allWords, vocabLoading]);
+
+  const filteredLearnedWords = useMemo(() => {
+    if (difficultyFilter === 'all') {
+      return allLearnedWords;
+    }
+    return allLearnedWords.filter(word => word.difficulty === difficultyFilter);
+  }, [allLearnedWords, difficultyFilter]);
 
   useEffect(() => {
     if (authLoading || vocabLoading) {
@@ -82,51 +93,22 @@ export default function QuizPage() {
     }
   }, [authLoading, vocabLoading, user, allWords, allLearnedWords]);
 
-  const handleScopeSelected = useCallback((scope: QuizScope) => {
-    let wordsForScope: VocabularyWord[] = [];
-    if (scope === 'today') {
-      wordsForScope = todayLearnedWords;
-    } else {
-      wordsForScope = allLearnedWords;
-    }
-
-    if (wordsForScope.length === 0) {
+  const startQuiz = useCallback((wordsToQuiz: VocabularyWord[]) => {
+    if (wordsToQuiz.length === 0) {
       toast({
-        title: "No Words for Scope",
-        description: `You have no learned words for the "${scope === 'today' ? 'Today' : 'Random'}" selection.`,
-        variant: "destructive"
+        title: "No Words to Quiz",
+        description: "There are no learned words matching your selection.",
+        variant: "destructive",
       });
-      return; 
+      return;
     }
     
-    setCurrentQuizScope(scope);
-    prepareAndStartActualQuiz(scope);
-  }, [todayLearnedWords, allLearnedWords, toast]);
-  
-  const prepareAndStartActualQuiz = useCallback((scope: QuizScope) => {
-    let selectedWordsForQuiz: VocabularyWord[] = [];
-
-    if (scope === 'today') {
-      selectedWordsForQuiz = shuffleArray([...todayLearnedWords]);
-    } else { // scope === 'random10'
-      selectedWordsForQuiz = shuffleArray([...allLearnedWords]).slice(0, MAX_QUIZ_WORDS);
-    }
-
-    if (selectedWordsForQuiz.length === 0) {
-        toast({ title: "Quiz Error", description: "Could not prepare quiz words. Not enough words for the selected scope.", variant: "destructive" });
-        setNoDataMessage("Not enough words available for this quiz type. Try adding or learning more.");
-        if (allLearnedWords.length === 0) setQuizState('no_data');
-        else setQuizState('choosing_scope');
-        return;
-    }
-
-    setQuizWords(selectedWordsForQuiz);
+    setQuizWords(shuffleArray([...wordsToQuiz]));
     setCurrentWordIndex(0);
     setIsFlipped(false);
     setProcessingAnswer(false);
     setQuizState('playing');
-  }, [allLearnedWords, todayLearnedWords, toast]);
-
+  }, [toast]);
 
   const handleFlipCard = () => {
     setIsFlipped(!isFlipped);
@@ -160,7 +142,6 @@ export default function QuizPage() {
   };
 
   const handleRestartQuiz = () => {
-    setCurrentQuizScope(null);
     if (allWords.length === 0) {
       setNoDataMessage("You haven't added any words to your vocabulary yet. Start by adding some!");
       setQuizState('no_data');
@@ -188,13 +169,12 @@ export default function QuizPage() {
       let enPart = "";
       let splitSuccessful = false;
 
-      // Try splitting by Japanese punctuation followed by English
-      const jpEndMarkers = ['。', '．', '.']; // Full-width dot, standard dot
+      const jpEndMarkers = ['。', '．', '.']; 
       for (const marker of jpEndMarkers) {
         const markerIndex = fullSentence.indexOf(marker);
-        if (markerIndex > 0 && markerIndex < fullSentence.length - 1) { // Ensure marker is not at start/end
+        if (markerIndex > 0 && markerIndex < fullSentence.length - 1) { 
           const potentialEn = fullSentence.substring(markerIndex + 1).trim();
-          if (potentialEn.length > 0 && /[a-zA-Z]/.test(potentialEn[0])) { // Check if the first char after trim is English
+          if (potentialEn.length > 0 && /[a-zA-Z]/.test(potentialEn[0])) { 
             jpPart = fullSentence.substring(0, markerIndex + 1).trim();
             enPart = potentialEn;
             splitSuccessful = true;
@@ -203,15 +183,13 @@ export default function QuizPage() {
         }
       }
 
-      // If no period-based split, try " - " separator
       if (!splitSuccessful) {
         const dashSeparatorIndex = fullSentence.indexOf(' - ');
         if (dashSeparatorIndex > 0) {
           const potentialEn = fullSentence.substring(dashSeparatorIndex + 3).trim();
-           if (potentialEn.length > 0 && /[a-zA-Z]/.test(potentialEn[0])) { // Check if first char after trim is English
+           if (potentialEn.length > 0 && /[a-zA-Z]/.test(potentialEn[0])) { 
              jpPart = fullSentence.substring(0, dashSeparatorIndex).trim();
              enPart = potentialEn;
-             // splitSuccessful = true; // Not strictly needed here
            }
         }
       }
@@ -265,34 +243,60 @@ export default function QuizPage() {
   if (quizState === 'choosing_scope') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-        <Card className="w-full max-w-md text-center p-8 shadow-xl bg-card">
+        <Card className="w-full max-w-lg text-center p-6 shadow-xl bg-card">
           <CardHeader>
-            <CardTitle className="font-headline text-3xl text-primary">Choose Quiz Scope</CardTitle>
+            <CardTitle className="font-headline text-3xl text-primary">Flashcard Quiz</CardTitle>
+            <CardDescription className="text-muted-foreground">Choose which words you want to review.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button 
-              onClick={() => handleScopeSelected('today')} 
-              size="lg" 
-              className="w-full text-lg"
-              disabled={todayLearnedWords.length === 0}
-            >
-              <CalendarDays className="mr-2 h-5 w-5" />
-              Today's Learned Words ({todayLearnedWords.length})
-            </Button>
-            {todayLearnedWords.length === 0 && <p className="text-xs text-muted-foreground">No words learned today.</p>}
-            
-            <Button 
-              onClick={() => handleScopeSelected('random10')} 
-              size="lg" 
-              className="w-full text-lg"
-              disabled={allLearnedWords.length === 0}
-            >
-              <Shuffle className="mr-2 h-5 w-5" />
-              Random {Math.min(MAX_QUIZ_WORDS, allLearnedWords.length)} Learned Words 
-              <span className="text-sm ml-1 text-primary-foreground/80"> (from {allLearnedWords.length})</span>
-            </Button>
-            {allLearnedWords.length > 0 && allLearnedWords.length < MAX_QUIZ_WORDS && <p className="text-xs text-muted-foreground">Fewer than {MAX_QUIZ_WORDS} learned words available.</p>}
-            {allLearnedWords.length === 0 && <p className="text-xs text-muted-foreground">No learned words available for random selection.</p>}
+          <CardContent className="space-y-6 pt-4">
+            <div>
+              <Button 
+                onClick={() => startQuiz(todayLearnedWords)} 
+                size="lg" 
+                className="w-full text-lg"
+                disabled={todayLearnedWords.length === 0}
+              >
+                <CalendarDays className="mr-2 h-5 w-5" />
+                Quiz Today's Learned Words ({todayLearnedWords.length})
+              </Button>
+              {todayLearnedWords.length === 0 && <p className="text-xs text-muted-foreground mt-1">No words learned today.</p>}
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground">Review All Learned Words</h3>
+              
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <ListChecks className="h-5 w-5 text-primary" />
+                  Difficulty:
+                </div>
+                {difficultyFilters.map((filter) => (
+                  <Button
+                    key={filter.value}
+                    variant={difficultyFilter === filter.value ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setDifficultyFilter(filter.value)}
+                    className="capitalize transition-all duration-150 ease-in-out"
+                  >
+                    {difficultyFilter === filter.value && <Check className="h-4 w-4 mr-1" />}
+                    {filter.label}
+                  </Button>
+                ))}
+              </div>
+              
+              <Button 
+                onClick={() => startQuiz(filteredLearnedWords)} 
+                size="lg" 
+                className="w-full text-lg"
+                disabled={filteredLearnedWords.length === 0}
+              >
+                <Shuffle className="mr-2 h-5 w-5" />
+                Start Quiz ({filteredLearnedWords.length} words)
+              </Button>
+              {allLearnedWords.length > 0 && filteredLearnedWords.length === 0 && <p className="text-xs text-muted-foreground text-center mt-1">No learned words match this difficulty.</p>}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -426,3 +430,5 @@ export default function QuizPage() {
     </div>
   );
 }
+
+    
