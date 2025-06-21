@@ -52,7 +52,7 @@ export default function RootLayout({
         <footer className="bg-card border-t border-border/20 py-6 mt-auto">
           <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
             <Link href="/privacy" className="hover:text-primary underline">Privacy Policy</Link>
-            <p className="mt-2">&copy; {new Date().getFullYear()} Nihongo Daily. All rights reserved.</p>
+            <p className="mt-2">&copy; 2024 Nihongo Daily. All rights reserved.</p>
           </div>
         </footer>
       </body>
