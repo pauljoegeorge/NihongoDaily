@@ -1,6 +1,8 @@
+
 "use client";
 
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { Cherry, BookMarked, LayoutDashboard, FileQuestion, BookText, ChevronDown, Menu } from 'lucide-react';
 import Link from 'next/link';
 import SignInButton from '@/components/auth/SignInButton';
@@ -30,6 +32,7 @@ const NavLink = ({ href, children, onClick }: { href: string; children: React.Re
 
 export default function Header() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <header className="bg-primary/10 py-3 shadow-md sticky top-0 z-40 backdrop-blur-sm">
@@ -41,84 +44,88 @@ export default function Header() {
           </h1>
         </Link>
 
-        {/* --- Desktop Navigation --- */}
-        <nav className="hidden md:flex items-center gap-1">
-          <Link href="/dashboard" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors hover:bg-primary/5">
-            <LayoutDashboard className="h-5 w-5" />
-            Dashboard
-          </Link>
+        {/* --- Desktop Navigation (Logged In) --- */}
+        {user && (
+          <nav className="hidden md:flex items-center gap-1">
+            <Link href="/dashboard" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors hover:bg-primary/5">
+              <LayoutDashboard className="h-5 w-5" />
+              Dashboard
+            </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors hover:bg-primary/5 focus-visible:ring-0">
-                Study Tools
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-card border-border shadow-lg">
-              <DropdownMenuItem asChild className="cursor-pointer hover:bg-primary/10">
-                <Link href="/quiz" className="flex items-center gap-2 text-primary w-full">
-                  <BookMarked className="h-5 w-5" />
-                  Flashcards
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer hover:bg-primary/10">
-                <Link href="/fill-quiz" className="flex items-center gap-2 text-primary w-full">
-                  <FileQuestion className="h-5 w-5" />
-                  Fill Quiz
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer hover:bg-primary/10">
-                <Link href="/kanji" className="flex items-center gap-2 text-primary w-full">
-                  <BookText className="h-5 w-5" />
-                  Kanji
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </nav>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 px-3 py-2 rounded-md transition-colors hover:bg-primary/5 focus-visible:ring-0">
+                  Study Tools
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-card border-border shadow-lg">
+                <DropdownMenuItem asChild className="cursor-pointer hover:bg-primary/10">
+                  <Link href="/quiz" className="flex items-center gap-2 text-primary w-full">
+                    <BookMarked className="h-5 w-5" />
+                    Flashcards
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer hover:bg-primary/10">
+                  <Link href="/fill-quiz" className="flex items-center gap-2 text-primary w-full">
+                    <FileQuestion className="h-5 w-5" />
+                    Fill Quiz
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer hover:bg-primary/10">
+                  <Link href="/kanji" className="flex items-center gap-2 text-primary w-full">
+                    <BookText className="h-5 w-5" />
+                    Kanji
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
+        )}
 
         <div className="flex items-center gap-2">
            <ThemeSwitcher />
            <SignInButton />
           
-          {/* --- Mobile Navigation --- */}
-          <div className="md:hidden">
-            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="text-primary border-primary/30">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Open menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] bg-card p-4">
-                <SheetHeader className="text-left mb-8">
-                  <SheetTitle className="text-primary font-headline text-2xl flex items-center gap-2">
-                    <Cherry className="h-7 w-7" />
-                    Navigation
-                  </SheetTitle>
-                </SheetHeader>
-                <nav className="flex flex-col gap-2">
-                  <NavLink href="/dashboard" onClick={() => setIsSheetOpen(false)}>
-                    <LayoutDashboard className="h-5 w-5" />
-                    Dashboard
-                  </NavLink>
-                  <NavLink href="/quiz" onClick={() => setIsSheetOpen(false)}>
-                    <BookMarked className="h-5 w-5" />
-                    Flashcards
-                  </NavLink>
-                  <NavLink href="/fill-quiz" onClick={() => setIsSheetOpen(false)}>
-                    <FileQuestion className="h-5 w-5" />
-                    Fill Quiz
-                  </NavLink>
-                  <NavLink href="/kanji" onClick={() => setIsSheetOpen(false)}>
-                    <BookText className="h-5 w-5" />
-                    Kanji
-                  </NavLink>
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
+          {/* --- Mobile Navigation (Logged In) --- */}
+          {user && (
+            <div className="md:hidden">
+              <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="text-primary border-primary/30">
+                    <Menu className="h-6 w-6" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[280px] bg-card p-4">
+                  <SheetHeader className="text-left mb-8">
+                    <SheetTitle className="text-primary font-headline text-2xl flex items-center gap-2">
+                      <Cherry className="h-7 w-7" />
+                      Navigation
+                    </SheetTitle>
+                  </SheetHeader>
+                  <nav className="flex flex-col gap-2">
+                    <NavLink href="/dashboard" onClick={() => setIsSheetOpen(false)}>
+                      <LayoutDashboard className="h-5 w-5" />
+                      Dashboard
+                    </NavLink>
+                    <NavLink href="/quiz" onClick={() => setIsSheetOpen(false)}>
+                      <BookMarked className="h-5 w-5" />
+                      Flashcards
+                    </NavLink>
+                    <NavLink href="/fill-quiz" onClick={() => setIsSheetOpen(false)}>
+                      <FileQuestion className="h-5 w-5" />
+                      Fill Quiz
+                    </NavLink>
+                    <NavLink href="/kanji" onClick={() => setIsSheetOpen(false)}>
+                      <BookText className="h-5 w-5" />
+                      Kanji
+                    </NavLink>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </div>
+          )}
         </div>
       </div>
     </header>
