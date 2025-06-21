@@ -341,7 +341,7 @@ export default function QuizPage() {
   }
 
   const ActionButtons = () => (
-    <div className="flex gap-4 w-full justify-center mt-auto pt-4 border-t border-border/20">
+    <div className="flex-shrink-0 flex gap-4 w-full justify-center pt-4 border-t border-border/20">
       <Button 
         onClick={() => handleAnswer(false)} 
         variant="destructive" 
@@ -373,7 +373,7 @@ export default function QuizPage() {
       <Card className="w-full max-w-lg min-h-[450px] shadow-2xl bg-card relative overflow-hidden">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d grid grid-cols-1 grid-rows-1 ${isFlipped ? 'rotate-y-180' : ''}`}>
           {/* Front of the Card - Always Japanese word & Romaji */}
-          <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden p-4 text-center">
+          <div className="col-start-1 row-start-1 w-full h-full flex flex-col backface-hidden p-4 text-center">
             <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3">
               <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
               <p className="text-xl text-muted-foreground">{currentWord.romaji}</p>
@@ -385,7 +385,7 @@ export default function QuizPage() {
           </div>
 
           {/* Back of the Card - Always Definition & Examples */}
-          <div className="col-start-1 row-start-1 w-full h-full flex flex-col items-center backface-hidden rotate-y-180 p-4 text-center">
+          <div className="col-start-1 row-start-1 w-full h-full flex flex-col backface-hidden rotate-y-180 p-4 text-center">
             <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3 overflow-y-auto">
                 <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
               
