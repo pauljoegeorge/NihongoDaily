@@ -7,12 +7,13 @@ import VocabularyList from '@/components/vocabulary/VocabularyList';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { Button } from '@/components/ui/button';
 import type { DifficultyFilter, VocabularyWord } from '@/types';
-import { ListFilter, Check, Shuffle, LogIn, Loader2, Info, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ListFilter, Check, Shuffle, Loader2, Info, Search, ChevronLeft, ChevronRight, Cherry } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { format, isToday, isYesterday, parseISO, compareDesc } from 'date-fns';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 type LearnedStatusFilter = 'all' | 'learned' | 'unlearned';
 
@@ -23,7 +24,7 @@ interface GroupedWords {
 const DAYS_PER_PAGE = 5;
 
 export default function Home() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const {
     words,
     loading: vocabLoading,
@@ -131,35 +132,9 @@ export default function Home() {
 
   if (authLoading) {
     return (
-      <div className="space-y-8">
-        <div className="mb-6 p-4 bg-card shadow rounded-lg space-y-4">
-          <Skeleton className="h-9 w-full mb-2" />
-          <div className="flex flex-wrap items-center gap-2">
-            <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-20" />
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-20" />
-            <Skeleton className="h-9 w-28" />
-          </div>
-          <Skeleton className="h-9 w-48" />
-        </div>
-        <Skeleton className="h-8 w-1/4 mb-4" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, cardIndex) => (
-            <div key={cardIndex} className="bg-card p-6 rounded-lg shadow-md">
-              <Skeleton className="h-8 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-1/2 mb-4" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-10 w-1/4 mt-4" />
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-lg text-foreground">Loading...</p>
       </div>
     );
   }
@@ -167,14 +142,24 @@ export default function Home() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-        <Alert className="max-w-md text-center bg-primary/5 border-primary/20">
-          <LogIn className="h-6 w-6 mx-auto mb-3 text-primary" />
-          <AlertTitle className="font-headline text-2xl text-primary mb-2">Welcome to Nihongo Daily!</AlertTitle>
-          <AlertDescription className="text-primary-foreground/80">
-            Please sign in to manage and track your Japanese vocabulary.
-            Use the button in the header to sign in with your Google account.
-          </AlertDescription>
-        </Alert>
+        <Card className="w-full max-w-md p-8 shadow-xl bg-card text-center">
+          <CardHeader>
+            <Cherry className="h-16 w-16 mx-auto text-primary mb-4" />
+            <CardTitle className="font-headline text-4xl text-primary">Welcome to Nihongo Daily</CardTitle>
+            <CardDescription className="text-muted-foreground pt-2">
+              Your personal space to grow your Japanese vocabulary, one day at a time.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-6 text-foreground">Sign in with your Google account to get started.</p>
+            <Button onClick={signInWithGoogle} size="lg" className="w-full">
+              <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.5 512 0 398.8 0 256S110.5 0 244 0c69.8 0 130.8 28.5 173.4 72.6l-65.4 63.5C332.1 102.5 291.1 80 244 80c-82.3 0-152.2 64.5-152.2 143.9S161.7 367.8 244 367.8c59.9 0 97.7-25.2 124.8-51.1 19.4-18.4 32.4-42.8 38.8-70.8H244V261.8h244z"></path>
+              </svg>
+              Sign in with Google
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

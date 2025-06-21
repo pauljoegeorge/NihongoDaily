@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { LogIn, Loader2, Info, Search, BookText } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 export default function KanjiPage() {
   const { user, loading: authLoading } = useAuth();
@@ -38,7 +39,7 @@ export default function KanjiPage() {
           <LogIn className="h-6 w-6 mx-auto mb-3 text-primary" />
           <AlertTitle className="font-headline text-2xl text-primary mb-2">Sign In Required</AlertTitle>
           <AlertDescription className="text-primary-foreground/80">
-            Please sign in to manage and view your Kanji collection.
+            Please <Link href="/" className="underline hover:text-primary-foreground font-semibold">sign in</Link> to manage and view your Kanji collection.
           </AlertDescription>
         </Alert>
       </div>

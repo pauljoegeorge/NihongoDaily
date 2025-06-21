@@ -4,7 +4,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogIn, LogOut, User as UserIcon, Loader2, Settings, ShieldCheck } from 'lucide-react';
+import { LogOut, User as UserIcon, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,13 +15,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function SignInButton() {
-  const { user, loading, signInWithGoogle, signOutUser } = useAuth();
+  const { user, loading, signOutUser } = useAuth();
 
   if (loading) {
     return (
-      <Button variant="outline" size="sm" disabled className="bg-transparent hover:bg-primary/10 border-primary/30 text-primary">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Loading...
+      <Button variant="ghost" size="icon" disabled className="h-10 w-10 rounded-full">
+        <Loader2 className="h-4 w-4 animate-spin" />
       </Button>
     );
   }
@@ -58,13 +57,5 @@ export default function SignInButton() {
     );
   }
 
-  return (
-    <Button onClick={signInWithGoogle} variant="outline" size="sm" className="bg-transparent hover:bg-primary/10 border-primary/30 text-primary">
-      <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-        <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.5 512 0 398.8 0 256S110.5 0 244 0c69.8 0 130.8 28.5 173.4 72.6l-65.4 63.5C332.1 102.5 291.1 80 244 80c-82.3 0-152.2 64.5-152.2 143.9S161.7 367.8 244 367.8c59.9 0 97.7-25.2 124.8-51.1 19.4-18.4 32.4-42.8 38.8-70.8H244V261.8h244z"></path>
-      </svg>
-      <span className="hidden sm:inline">Sign in with Google</span>
-      <span className="sm:hidden">Sign In</span>
-    </Button>
-  );
+  return null;
 }
