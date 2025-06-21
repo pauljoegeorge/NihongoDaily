@@ -14,20 +14,20 @@ import {
   Loader2, 
   RefreshCcw, 
   Smile, 
-  XCircle,
   CalendarDays,
   Shuffle,
   BookOpenCheck,
   ListChecks,
   MinusCircle,
   Check,
+  BookText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { isToday } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from '@/components/ui/separator';
 
-const MAX_QUIZ_WORDS = 10; // This constant is no longer used for slicing but kept for reference
+const MAX_QUIZ_WORDS = 10;
 
 type QuizState = 'loading' | 'choosing_scope' | 'playing' | 'finished' | 'no_data';
 
@@ -126,19 +126,16 @@ export default function QuizPage() {
       }
     }
 
-    // Immediately start the flip-back animation
     setIsFlipped(false);
 
-    // Use a short timeout to allow the animation to start before changing the card's content
     setTimeout(() => {
       if (currentWordIndex < quizWords.length - 1) {
         setCurrentWordIndex(currentWordIndex + 1);
       } else {
         setQuizState('finished');
       }
-      // The processing state ends after the next card is ready
       setProcessingAnswer(false);
-    }, 200); // 200ms delay to prevent content flicker during flip animation
+    }, 200); 
   };
 
   const handleRestartQuiz = () => {
@@ -241,6 +238,8 @@ export default function QuizPage() {
   }
 
   if (quizState === 'choosing_scope') {
+    const numRandomWords = Math.min(MAX_QUIZ_WORDS, allLearnedWords.length);
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Card className="w-full max-w-lg text-center p-6 shadow-xl bg-card">
@@ -249,6 +248,7 @@ export default function QuizPage() {
             <CardDescription className="text-muted-foreground">Choose which words you want to review.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-4">
+            {/* 1. Today's Words */}
             <div>
               <Button 
                 onClick={() => startQuiz(todayLearnedWords)} 
@@ -263,9 +263,28 @@ export default function QuizPage() {
             </div>
 
             <Separator />
+            
+            {/* 2. Random 10 Learned Words */}
+            <div>
+              <Button 
+                onClick={() => startQuiz(shuffleArray(allLearnedWords).slice(0, MAX_QUIZ_WORDS))}
+                size="lg" 
+                className="w-full text-lg"
+                disabled={allLearnedWords.length === 0}
+              >
+                <BookText className="mr-2 h-5 w-5" />
+                Quiz {numRandomWords} Random Learned Words 
+                <span className="text-sm ml-1 text-primary-foreground/80">(from {allLearnedWords.length})</span>
+              </Button>
+              {allLearnedWords.length === 0 && <p className="text-xs text-muted-foreground mt-1">No learned words available for a random quiz.</p>}
+              {allLearnedWords.length > 0 && allLearnedWords.length < MAX_QUIZ_WORDS && <p className="text-xs text-muted-foreground mt-1">Fewer than {MAX_QUIZ_WORDS} learned words available in total.</p>}
+            </div>
 
+            <Separator />
+
+            {/* 3. All Learned by Difficulty */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-foreground">Review All Learned Words</h3>
+              <h3 className="font-semibold text-foreground">Review All Learned Words by Difficulty</h3>
               
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -380,7 +399,7 @@ export default function QuizPage() {
           {/* Front of the Card - Always Japanese word & Romaji */}
           <div className="col-start-1 row-start-1 w-full h-full flex flex-col backface-hidden p-4">
             <div className="flex-grow flex flex-col justify-center overflow-hidden">
-              <div className="overflow-y-auto text-center space-y-3">
+              <div className="overflow-y-auto text-center space-y-3 p-2">
                 <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
                 <p className="text-xl text-muted-foreground">{currentWord.romaji}</p>
                 <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">
@@ -430,5 +449,3 @@ export default function QuizPage() {
     </div>
   );
 }
-
-    
