@@ -144,8 +144,8 @@ export default function QuizPage() {
     }
 
     if (currentWordIndex < quizWords.length - 1) {
-      setCurrentWordIndex(currentWordIndex + 1);
       setIsFlipped(false);
+      setCurrentWordIndex(currentWordIndex + 1);
     } else {
       setQuizState('finished');
     }
@@ -415,5 +415,3 @@ export default function QuizPage() {
     </div>
   );
 }
-
-    
