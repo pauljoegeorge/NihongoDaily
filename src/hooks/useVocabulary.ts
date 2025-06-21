@@ -28,17 +28,15 @@ import {
 } from 'firebase/firestore';
 import * as z from 'zod';
 
-// Define FormData type used by Add/Edit dialogs
-// This should ideally be in types/forms.ts or similar if it grows
 const difficultyLevels = z.enum(['easy', 'medium', 'hard']);
-const formSchema = z.object({
+export const vocabularyFormSchema = z.object({
   japanese: z.string().min(1, 'Japanese word is required.'),
   romaji: z.string().min(1, 'Reading is required.'),
   definition: z.string().min(1, 'Definition is required.'),
   exampleSentences: z.string().optional(),
   difficulty: difficultyLevels.default('medium'),
 });
-export type VocabularyFormDataType = z.infer<typeof formSchema>;
+export type VocabularyFormData = z.infer<typeof vocabularyFormSchema>;
 
 
 export function useVocabulary() {
@@ -184,7 +182,7 @@ export function useVocabulary() {
     }
   }, [user, toast]);
 
-  const updateWord = useCallback(async (wordId: string, updatedFormData: VocabularyFormDataType) => {
+  const updateWord = useCallback(async (wordId: string, updatedFormData: VocabularyFormData) => {
     if (!user) {
       toast({ title: "Not Authenticated", description: "You must be signed in to update words.", variant: "destructive" });
       return;

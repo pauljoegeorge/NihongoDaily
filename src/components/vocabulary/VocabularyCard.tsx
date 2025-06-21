@@ -15,16 +15,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import EditVocabularyDialog, { type EditFormData } from './EditVocabularyDialog';
+import EditVocabularyDialog from './EditVocabularyDialog';
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import type { VocabularyFormData } from '@/hooks/useVocabulary';
 
 interface VocabularyCardProps {
   word: VocabularyWord;
   onToggleLearned: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdateDifficulty: (id: string, difficulty: 'easy' | 'medium' | 'hard') => void;
-  onUpdateWord: (id: string, data: EditFormData) => Promise<void>;
+  onUpdateWord: (id: string, data: VocabularyFormData) => Promise<void>;
 }
 
 export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpdateDifficulty, onUpdateWord }: VocabularyCardProps) {

@@ -4,7 +4,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,31 +27,20 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-const difficultyLevels = z.enum(['easy', 'medium', 'hard']);
-
-const formSchema = z.object({
-  japanese: z.string().min(1, 'Japanese word is required.'),
-  romaji: z.string().min(1, 'Reading is required.'),
-  definition: z.string().min(1, 'Definition is required.'),
-  exampleSentences: z.string().optional(),
-  difficulty: difficultyLevels.default('medium'),
-});
-
-export type EditFormData = z.infer<typeof formSchema>;
+import { vocabularyFormSchema, type VocabularyFormData } from '@/hooks/useVocabulary';
 
 interface EditVocabularyDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   wordToEdit: VocabularyWord;
-  onUpdateWord: (wordId: string, data: EditFormData) => Promise<void>;
+  onUpdateWord: (wordId: string, data: VocabularyFormData) => Promise<void>;
 }
 
 export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, onUpdateWord }: EditVocabularyDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<EditFormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<VocabularyFormData>({
+    resolver: zodResolver(vocabularyFormSchema),
   });
 
   useEffect(() => {
@@ -67,7 +55,7 @@ export default function EditVocabularyDialog({ isOpen, setIsOpen, wordToEdit, on
     }
   }, [wordToEdit, isOpen, form]);
 
-  const onSubmit = async (values: EditFormData) => {
+  const onSubmit = async (values: VocabularyFormData) => {
     setIsSubmitting(true);
     try {
       await onUpdateWord(wordToEdit.id, values);

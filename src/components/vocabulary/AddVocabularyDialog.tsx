@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,19 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-
-const difficultyLevels = z.enum(['easy', 'medium', 'hard']);
-
-const formSchema = z.object({
-  japanese: z.string().min(1, 'Japanese word is required.'),
-  romaji: z.string().min(1, 'Reading is required.'),
-  definition: z.string().min(1, 'Definition is required.'),
-  exampleSentences: z.string().optional(),
-  difficulty: difficultyLevels.default('medium'),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import { vocabularyFormSchema, type VocabularyFormData } from '@/hooks/useVocabulary';
 
 interface AddVocabularyDialogProps {
   onAddWord: (wordData: Omit<VocabularyWord, 'id' | 'learned' | 'createdAt'>) => Promise<VocabularyWord | undefined>;
@@ -50,8 +37,8 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<VocabularyFormData>({
+    resolver: zodResolver(vocabularyFormSchema),
     defaultValues: {
       japanese: '',
       romaji: '',
@@ -61,7 +48,7 @@ export default function AddVocabularyDialog({ onAddWord }: AddVocabularyDialogPr
     },
   });
 
-  const onSubmit = async (values: FormData) => {
+  const onSubmit = async (values: VocabularyFormData) => {
     setIsSubmitting(true);
     try {
       const exampleSentencesArray = values.exampleSentences

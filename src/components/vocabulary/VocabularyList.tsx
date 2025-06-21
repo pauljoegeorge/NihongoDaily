@@ -5,7 +5,7 @@ import type { VocabularyWord } from '@/types';
 import VocabularyCard from './VocabularyCard';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
-import type { EditFormData } from './EditVocabularyDialog'; 
+import type { VocabularyFormData } from '@/hooks/useVocabulary';
 
 interface VocabularyListProps {
   groupedWords: { [key: string]: VocabularyWord[] };
@@ -13,7 +13,7 @@ interface VocabularyListProps {
   toggleLearnedStatus: (id: string) => void;
   deleteWord: (id: string) => void;
   updateWordDifficulty: (id: string, difficulty: 'easy' | 'medium' | 'hard') => void;
-  updateWord: (id: string, data: EditFormData) => Promise<void>;
+  updateWord: (id: string, data: VocabularyFormData) => Promise<void>;
   isTodayRandomized: boolean;
 }
 
