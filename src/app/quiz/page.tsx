@@ -19,6 +19,7 @@ import {
   Shuffle,
   BookOpenCheck,
   ListChecks,
+  MinusCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { isToday } from 'date-fns';
@@ -350,7 +351,7 @@ export default function QuizPage() {
         aria-label="Didn't know"
         disabled={processingAnswer}
       >
-        {processingAnswer && !isFlipped ? <Loader2 className="h-6 w-6 animate-spin" /> : <XCircle className="h-6 w-6" />}
+        {processingAnswer && !isFlipped ? <Loader2 className="h-6 w-6 animate-spin" /> : <MinusCircle className="h-6 w-6" />}
       </Button>
       <Button 
         onClick={() => handleAnswer(true)} 
@@ -373,24 +374,27 @@ export default function QuizPage() {
       <Card className="w-full max-w-lg min-h-[450px] shadow-2xl bg-card relative overflow-hidden">
         <div className={`transition-transform duration-700 ease-in-out w-full h-full transform-style-preserve-3d grid grid-cols-1 grid-rows-1 ${isFlipped ? 'rotate-y-180' : ''}`}>
           {/* Front of the Card - Always Japanese word & Romaji */}
-          <div className="col-start-1 row-start-1 w-full h-full flex flex-col backface-hidden p-4 text-center">
-            <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3">
-              <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
-              <p className="text-xl text-muted-foreground">{currentWord.romaji}</p>
-              <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">
-                Reveal Definition
-              </Button>
+          <div className="col-start-1 row-start-1 w-full h-full flex flex-col backface-hidden p-4">
+            <div className="flex-grow flex flex-col justify-center overflow-hidden">
+              <div className="overflow-y-auto text-center space-y-3">
+                <p className="font-headline text-5xl text-primary mb-2 break-words max-w-full">{currentWord.japanese}</p>
+                <p className="text-xl text-muted-foreground">{currentWord.romaji}</p>
+                <Button variant="outline" onClick={handleFlipCard} className="mt-4 mb-3">
+                  Reveal Definition
+                </Button>
+              </div>
             </div>
             <ActionButtons />
           </div>
 
           {/* Back of the Card - Always Definition & Examples */}
-          <div className="col-start-1 row-start-1 w-full h-full flex flex-col backface-hidden rotate-y-180 p-4 text-center">
-            <div className="flex-grow flex flex-col items-center justify-center w-full space-y-3 overflow-y-auto">
+          <div className="col-start-1 row-start-1 w-full h-full flex flex-col backface-hidden rotate-y-180 p-4">
+            <div className="flex-grow flex flex-col justify-center overflow-hidden">
+              <div className="overflow-y-auto text-center space-y-3 p-2">
                 <p className="text-2xl lg:text-3xl text-foreground break-words max-w-full leading-relaxed px-4">{currentWord.definition}</p>
               
                 {displayableExampleParts && (
-                  <div className="mt-4 pt-3 border-t border-border/20 w-full max-w-md">
+                  <div className="mt-4 pt-3 border-t border-border/20 w-full max-w-md mx-auto">
                     <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center justify-center">
                       <ListChecks className="h-4 w-4 mr-2 text-accent-foreground" />
                       Example Sentence:
@@ -406,7 +410,8 @@ export default function QuizPage() {
                   </div>
                 )}
               
-              <Button variant="outline" onClick={handleFlipCard} className="mt-3 mb-2">Flip Back</Button>
+                <Button variant="outline" onClick={handleFlipCard} className="mt-3 mb-2">Flip Back</Button>
+              </div>
             </div>
             <ActionButtons />
           </div>
