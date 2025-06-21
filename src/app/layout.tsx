@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/layout/Header';
 import { AuthProvider } from '@/context/AuthContext';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 
 export const metadata: Metadata = {
   title: 'Nihongo Daily',
@@ -40,6 +41,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
+        <GoogleAnalytics />
         <AuthProvider>
           <Header />
           <main className="container mx-auto px-4 py-8">
