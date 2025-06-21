@@ -51,7 +51,7 @@ export default function KanjiCard({ entry, onUpdate, onDelete }: KanjiCardProps)
           <div className="space-y-2">
             {entry.onyomi && entry.onyomi.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-muted-foreground flex items-center"><Mic className="h-4 w-4 mr-2 text-accent-foreground" />On'yomi</h4>
+                <h4 className="text-sm font-semibold text-muted-foreground flex items-center"><Mic className="h-4 w-4 mr-2 text-primary" />On'yomi</h4>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {entry.onyomi.map((on, index) => <Badge key={`on-${index}`} variant="secondary">{on}</Badge>)}
                 </div>
@@ -59,7 +59,7 @@ export default function KanjiCard({ entry, onUpdate, onDelete }: KanjiCardProps)
             )}
             {entry.kunyomi && entry.kunyomi.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-muted-foreground flex items-center"><Mic className="h-4 w-4 mr-2 text-accent-foreground" />Kun'yomi</h4>
+                <h4 className="text-sm font-semibold text-muted-foreground flex items-center"><Mic className="h-4 w-4 mr-2 text-primary" />Kun'yomi</h4>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {entry.kunyomi.map((kun, index) => <Badge key={`kun-${index}`} variant="secondary">{kun}</Badge>)}
                 </div>
@@ -73,7 +73,7 @@ export default function KanjiCard({ entry, onUpdate, onDelete }: KanjiCardProps)
             {onyomiExamples.length > 0 && (
               <AccordionItem value="item-onyomi-ex">
                 <AccordionTrigger className="text-base font-semibold hover:no-underline">
-                  <div className="flex items-center gap-2"><ListChecks className="h-5 w-5 text-accent-foreground" />On'yomi Examples</div>
+                  <div className="flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary" />On'yomi Examples</div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 space-y-1 max-h-40 overflow-y-auto">
                   {onyomiExamples.map((ex, index) => (
@@ -85,7 +85,7 @@ export default function KanjiCard({ entry, onUpdate, onDelete }: KanjiCardProps)
             {kunyomiExamples.length > 0 && (
               <AccordionItem value="item-kunyomi-ex">
                 <AccordionTrigger className="text-base font-semibold hover:no-underline">
-                  <div className="flex items-center gap-2"><ListChecks className="h-5 w-5 text-accent-foreground" />Kun'yomi Examples</div>
+                  <div className="flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary" />Kun'yomi Examples</div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 space-y-1 max-h-40 overflow-y-auto">
                   {kunyomiExamples.map((ex, index) => (
@@ -97,7 +97,7 @@ export default function KanjiCard({ entry, onUpdate, onDelete }: KanjiCardProps)
             {entry.usageExampleSentences && entry.usageExampleSentences.length > 0 && (
               <AccordionItem value="item-usage-ex">
                 <AccordionTrigger className="text-base font-semibold hover:no-underline">
-                   <div className="flex items-center gap-2"><MessageSquareText className="h-5 w-5 text-accent-foreground" />Usage Examples</div>
+                   <div className="flex items-center gap-2"><MessageSquareText className="h-5 w-5 text-primary" />Usage Examples</div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 space-y-1 max-h-40 overflow-y-auto">
                   {entry.usageExampleSentences.map((sentence, index) => (

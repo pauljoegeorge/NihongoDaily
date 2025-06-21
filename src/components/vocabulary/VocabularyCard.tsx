@@ -145,7 +145,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
           <div className="flex items-center gap-2 text-foreground">
-            <BookOpen className="h-5 w-5 text-accent-foreground" />
+            <BookOpen className="h-5 w-5 text-primary" />
             <p>{word.definition}</p>
           </div>
           
@@ -155,7 +155,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
             <AccordionItem value="item-reading">
               <AccordionTrigger className="text-base font-semibold hover:no-underline">
                 <div className="flex items-center gap-2">
-                  <Languages className="h-5 w-5 text-accent-foreground" />
+                  <Languages className="h-5 w-5 text-primary" />
                   Reading (Hiragana)
                 </div>
               </AccordionTrigger>
@@ -168,7 +168,7 @@ export default function VocabularyCard({ word, onToggleLearned, onDelete, onUpda
             <AccordionItem value="item-examples">
               <AccordionTrigger className="text-base font-semibold hover:no-underline">
                 <div className="flex items-center gap-2">
-                  <ListChecks className="h-5 w-5 text-accent-foreground" />
+                  <ListChecks className="h-5 w-5 text-primary" />
                   Example Sentences
                 </div>
               </AccordionTrigger>

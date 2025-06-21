@@ -396,7 +396,7 @@ export default function QuizPage() {
                 {displayableExampleParts && (
                   <div className="mt-4 pt-3 border-t border-border/20 w-full max-w-md mx-auto">
                     <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center justify-center">
-                      <ListChecks className="h-4 w-4 mr-2 text-accent-foreground" />
+                      <ListChecks className="h-4 w-4 mr-2 text-primary" />
                       Example Sentence:
                     </h4>
                     <p className="text-sm text-muted-foreground p-2 border rounded-md bg-muted/20 text-left mb-1">
