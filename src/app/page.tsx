@@ -1,19 +1,26 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import AddVocabularyDialog from '@/components/vocabulary/AddVocabularyDialog';
 import VocabularyList from '@/components/vocabulary/VocabularyList';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { Button } from '@/components/ui/button';
 import type { DifficultyFilter, VocabularyWord } from '@/types';
-import { ListFilter, Check, Shuffle, LogIn, Loader2, Info, Search } from 'lucide-react'; // Added Search icon
+import { ListFilter, Check, Shuffle, LogIn, Loader2, Info, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input'; // Added Input import
+import { Input } from '@/components/ui/input';
+import { format, isToday, isYesterday, parseISO, compareDesc } from 'date-fns';
 
 type LearnedStatusFilter = 'all' | 'learned' | 'unlearned';
+
+interface GroupedWords {
+  [key: string]: VocabularyWord[];
+}
+
+const DAYS_PER_PAGE = 5;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -31,6 +38,83 @@ export default function Home() {
   const [selectedDifficultyFilter, setSelectedDifficultyFilter] = useState<DifficultyFilter>('all');
   const [selectedLearnedFilter, setSelectedLearnedFilter] = useState<LearnedStatusFilter>('all');
   const [isTodayRandomized, setIsTodayRandomized] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const processedWords = useMemo(() => {
+    let processed = [...words];
+    if (searchTerm.trim()) {
+      processed = processed.filter(word =>
+        word.japanese.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        word.romaji.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        word.definition.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    if (selectedDifficultyFilter !== 'all') {
+      processed = processed.filter(word => word.difficulty === selectedDifficultyFilter);
+    }
+    if (selectedLearnedFilter === 'learned') {
+      processed = processed.filter(word => word.learned);
+    } else if (selectedLearnedFilter === 'unlearned') {
+      processed = processed.filter(word => !word.learned);
+    }
+    return processed;
+  }, [words, searchTerm, selectedLearnedFilter, selectedDifficultyFilter]);
+
+  const paginatedData = useMemo(() => {
+    const sortedWords = [...processedWords].sort((a, b) => compareDesc(new Date(a.createdAt), new Date(b.createdAt)));
+
+    const groupedWords = sortedWords.reduce((acc: GroupedWords, word) => {
+      const date = new Date(word.createdAt);
+      let dateKey: string;
+
+      if (isToday(date)) {
+        dateKey = 'Today';
+      } else if (isYesterday(date)) {
+        dateKey = 'Yesterday';
+      } else {
+        dateKey = format(date, 'yyyy-MM-dd');
+      }
+
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(word);
+      return acc;
+    }, {});
+
+    const allDateKeys = Object.keys(groupedWords).sort((a, b) => {
+      if (a === 'Today') return -1;
+      if (b === 'Today') return 1;
+      if (a === 'Yesterday') return -1;
+      if (b === 'Yesterday') return 1;
+      return compareDesc(parseISO(a), parseISO(b));
+    });
+
+    const totalPages = Math.ceil(allDateKeys.length / DAYS_PER_PAGE);
+    
+    const startIndex = (currentPage - 1) * DAYS_PER_PAGE;
+    const endIndex = startIndex + DAYS_PER_PAGE;
+    const dateKeysForPage = allDateKeys.slice(startIndex, endIndex);
+
+    const groupsForPage = dateKeysForPage.reduce((acc: GroupedWords, key) => {
+        if (groupedWords[key]) {
+          acc[key] = groupedWords[key];
+        }
+        return acc;
+    }, {});
+
+    return {
+        groupsForPage,
+        dateKeysForPage,
+        totalPages,
+    };
+  }, [processedWords, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedDifficultyFilter, selectedLearnedFilter]);
+
+  const { groupsForPage, dateKeysForPage, totalPages } = paginatedData;
 
   const difficultyFilters: { label: string; value: DifficultyFilter }[] = [
     { label: 'All', value: 'all' },
@@ -93,30 +177,6 @@ export default function Home() {
         </Alert>
       </div>
     );
-  }
-
-  // Apply filters
-  let processedWords = [...words];
-
-  // 1. Filter by search term
-  if (searchTerm.trim()) {
-    processedWords = processedWords.filter(word =>
-      word.japanese.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      word.romaji.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      word.definition.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }
-
-  // 2. Filter by difficulty
-  if (selectedDifficultyFilter !== 'all') {
-    processedWords = processedWords.filter(word => word.difficulty === selectedDifficultyFilter);
-  }
-
-  // 3. Filter by learned status
-  if (selectedLearnedFilter === 'learned') {
-    processedWords = processedWords.filter(word => word.learned);
-  } else if (selectedLearnedFilter === 'unlearned') {
-    processedWords = processedWords.filter(word => !word.learned);
   }
 
   return (
@@ -218,15 +278,42 @@ export default function Home() {
           </AlertDescription>
         </Alert>
       ) : (
-        <VocabularyList
-          words={processedWords}
-          loading={vocabLoading} 
-          toggleLearnedStatus={toggleLearnedStatus}
-          deleteWord={deleteWord}
-          updateWordDifficulty={updateWordDifficulty}
-          updateWord={updateWord}
-          isTodayRandomized={isTodayRandomized}
-        />
+        <>
+          <VocabularyList
+            groupedWords={groupsForPage}
+            dateKeys={dateKeysForPage}
+            toggleLearnedStatus={toggleLearnedStatus}
+            deleteWord={deleteWord}
+            updateWordDifficulty={updateWordDifficulty}
+            updateWord={updateWord}
+            isTodayRandomized={isTodayRandomized}
+          />
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center space-x-4 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <span className="text-sm font-medium text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
       <AddVocabularyDialog onAddWord={addWord} />
     </div>
