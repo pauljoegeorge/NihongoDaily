@@ -78,6 +78,13 @@ export default function QuizPage() {
   }, [allLearnedWords, difficultyFilter]);
 
   useEffect(() => {
+    // This effect determines the state BEFORE a quiz starts.
+    // We prevent it from running if a quiz is in progress or finished
+    // to avoid resetting the state due to background data changes.
+    if (quizState === 'playing' || quizState === 'finished') {
+      return;
+    }
+
     if (authLoading || vocabLoading) {
       setQuizState('loading');
     } else if (!user) {
@@ -91,7 +98,7 @@ export default function QuizPage() {
     } else {
       setQuizState('choosing_scope');
     }
-  }, [authLoading, vocabLoading, user, allWords, allLearnedWords]);
+  }, [authLoading, vocabLoading, user, allWords, allLearnedWords, quizState]);
 
   const startQuiz = useCallback((wordsToQuiz: VocabularyWord[]) => {
     if (wordsToQuiz.length === 0) {
