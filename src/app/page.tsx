@@ -44,11 +44,14 @@ export default function Home() {
 
   const processedWords = useMemo(() => {
     let processed = [...words];
-    if (searchTerm.trim()) {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
+    if (lowerCaseSearchTerm.trim()) {
       processed = processed.filter(word =>
-        word.japanese.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        word.romaji.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        word.definition.toLowerCase().includes(searchTerm.toLowerCase())
+        word.japanese.toLowerCase().includes(lowerCaseSearchTerm) ||
+        word.romaji.toLowerCase().includes(lowerCaseSearchTerm) ||
+        word.definition.toLowerCase().includes(lowerCaseSearchTerm) ||
+        (word.exampleSentences && word.exampleSentences.some(sentence => sentence.toLowerCase().includes(lowerCaseSearchTerm)))
       );
     }
     if (selectedDifficultyFilter !== 'all') {
