@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ArrowRightCircle, CheckCircle, Loader2, LogIn, FileQuestion, AlertTriangle, RefreshCcw, XCircle, HelpCircle, CalendarDays, Shuffle } from 'lucide-react';
+import { ArrowRightCircle, CheckCircle, Loader2, LogIn, FileQuestion, AlertTriangle, RefreshCcw, XCircle, HelpCircle, CalendarDays, Shuffle, BookOpen, ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import { isToday } from 'date-fns';
 
@@ -430,8 +430,34 @@ export default function FillQuizPage() {
                 {isCorrect ? "Correct!" : "Not quite!"}
               </AlertTitle>
               <AlertDescription className={isCorrect ? 'text-green-600' : 'text-red-600'}>
-                {isCorrect ? `The answer is indeed "${currentQ.correctAnswer}".` : `The correct answer was "${currentQ.correctAnswer}".`}
-                <p className="mt-1 text-sm">Original sentence: <span className="font-medium">{currentQ.originalSentence}</span></p>
+                {isCorrect ? (
+                  `The answer is indeed "${currentQ.correctAnswer}".`
+                ) : (
+                  <div className="space-y-3">
+                    <p>The correct answer was <strong className="font-semibold">"{currentQ.correctAnswer}"</strong>.</p>
+                    <div className="text-left p-3 border-t border-red-500/30">
+                       <div className="flex items-center gap-2 mb-2">
+                        <BookOpen className="h-4 w-4" />
+                        <p><strong>Meaning:</strong> {currentQ.vocabWord.definition}</p>
+                      </div>
+                      
+                       <div className="flex items-start gap-2">
+                        <ListChecks className="h-4 w-4 mt-1 shrink-0" />
+                        <div>
+                          <p className="mb-1"><strong>Example Sentences:</strong></p>
+                          <ul className="list-disc pl-5 space-y-1 text-sm">
+                            {currentQ.vocabWord.exampleSentences.length > 0 ? (
+                              currentQ.vocabWord.exampleSentences.map((ex, i) => <li key={i}>{ex}</li>)
+                            ) : (
+                              <li>No example sentences available.</li>
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
           )}
