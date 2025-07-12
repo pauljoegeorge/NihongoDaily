@@ -26,7 +26,7 @@ import * as z from 'zod';
 
 export const kanjiFormSchema = z.object({
   kanji: z.string().min(1, 'Kanji character is required.').max(5, 'Kanji input is too long, typically a single character.'), // Max 5 for rare cases or phrases
-  meaning: z.string().min(1, 'Meaning is required.'),
+  meaning: z.string().optional(),
   onyomi: z.string().optional(), // Comma-separated
   kunyomi: z.string().optional(), // Comma-separated
   onyomiExamplesText: z.string().optional(),
@@ -134,7 +134,7 @@ export function useKanji() {
 
     const newKanjiData: FirestoreKanjiEntry = {
       kanji: formData.kanji.trim(),
-      meaning: formData.meaning.trim(),
+      meaning: formData.meaning?.trim() || '',
       onyomi: formData.onyomi ? formData.onyomi.split(',').map(s => s.trim()).filter(s => s) : [],
       kunyomi: formData.kunyomi ? formData.kunyomi.split(',').map(s => s.trim()).filter(s => s) : [],
       onyomiExamplesText: formData.onyomiExamplesText || '',
@@ -177,7 +177,7 @@ export function useKanji() {
 
       const updatedKanjiData: Partial<FirestoreKanjiEntry> = {
         kanji: formData.kanji.trim(),
-        meaning: formData.meaning.trim(),
+        meaning: formData.meaning?.trim() || '',
         onyomi: formData.onyomi ? formData.onyomi.split(',').map(s => s.trim()).filter(s => s) : [],
         kunyomi: formData.kunyomi ? formData.kunyomi.split(',').map(s => s.trim()).filter(s => s) : [],
         onyomiExamplesText: formData.onyomiExamplesText || '',
