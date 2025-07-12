@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ArrowRightCircle, CheckCircle, Loader2, LogIn, FileQuestion, AlertTriangle, RefreshCcw, XCircle, HelpCircle, CalendarDays, Shuffle, BookOpen, ListChecks } from 'lucide-react';
+import { ArrowRightCircle, CheckCircle, Loader2, LogIn, FileQuestion, AlertTriangle, RefreshCcw, XCircle, HelpCircle, CalendarDays, Shuffle, BookOpen, ListChecks, Languages } from 'lucide-react';
 import Link from 'next/link';
 import { isToday } from 'date-fns';
 
@@ -435,12 +435,15 @@ export default function FillQuizPage() {
                 ) : (
                   <div className="space-y-3">
                     <p>The correct answer was <strong className="font-semibold">"{currentQ.correctAnswer}"</strong>.</p>
-                    <div className="text-left p-3 border-t border-red-500/30">
-                       <div className="flex items-center gap-2 mb-2">
+                    <div className="text-left p-3 border-t border-red-500/30 space-y-2">
+                       <div className="flex items-center gap-2">
                         <BookOpen className="h-4 w-4" />
                         <p><strong>Meaning:</strong> {currentQ.vocabWord.definition}</p>
                       </div>
-                      
+                      <div className="flex items-center gap-2">
+                        <Languages className="h-4 w-4" />
+                        <p><strong>Reading:</strong> {currentQ.vocabWord.romaji}</p>
+                      </div>
                        <div className="flex items-start gap-2">
                         <ListChecks className="h-4 w-4 mt-1 shrink-0" />
                         <div>
