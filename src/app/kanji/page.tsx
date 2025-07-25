@@ -1,21 +1,33 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useKanji } from '@/hooks/useKanji';
 import AddKanjiDialog from '@/components/kanji/AddKanjiDialog';
 import KanjiList from '@/components/kanji/KanjiList';
-import { LogIn, Info, Search, BookText } from 'lucide-react';
+import { LogIn, Info, Search, BookText, Shuffle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+
+// Helper function to shuffle an array
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
 
 export default function KanjiPage() {
   const { user, loading: authLoading } = useAuth();
   const { kanjiList, loading: kanjiLoading, addKanji, updateKanji, deleteKanji } = useKanji();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isShuffled, setIsShuffled] = useState(false);
 
   if (authLoading) {
     return (
@@ -43,15 +55,23 @@ export default function KanjiPage() {
     );
   }
 
-  const filteredKanjiList = kanjiList.filter(k => {
-    const term = searchTerm.toLowerCase();
-    return (
-      k.kanji.toLowerCase().includes(term) ||
-      (k.meaning && k.meaning.toLowerCase().includes(term)) ||
-      k.onyomi.some(on => on.toLowerCase().includes(term)) ||
-      k.kunyomi.some(kun => kun.toLowerCase().includes(term))
-    );
-  });
+  const displayedKanjiList = useMemo(() => {
+    const filtered = kanjiList.filter(k => {
+      const term = searchTerm.toLowerCase();
+      return (
+        k.kanji.toLowerCase().includes(term) ||
+        (k.meaning && k.meaning.toLowerCase().includes(term)) ||
+        k.onyomi.some(on => on.toLowerCase().includes(term)) ||
+        k.kunyomi.some(kun => kun.toLowerCase().includes(term))
+      );
+    });
+
+    if (isShuffled) {
+      return shuffleArray(filtered);
+    }
+    return filtered;
+  }, [kanjiList, searchTerm, isShuffled]);
+
 
   return (
     <div className="min-h-screen">
@@ -68,14 +88,23 @@ export default function KanjiPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full sm:max-w-xs bg-background"
           />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsShuffled(!isShuffled)}
+            aria-label={isShuffled ? "Unshuffle list" : "Shuffle list"}
+            className={isShuffled ? 'text-primary bg-primary/10' : ''}
+          >
+            <Shuffle className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
       {kanjiLoading ? (
-         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {[...Array(12)].map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-lg" />)}
+         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
+            {[...Array(24)].map((_, i) => <Skeleton key={i} className="aspect-square w-full rounded-lg" />)}
         </div>
-      ) : filteredKanjiList.length === 0 ? (
+      ) : displayedKanjiList.length === 0 ? (
         <Alert className="max-w-md mx-auto bg-accent/10 border-accent/30">
           <Info className="h-5 w-5 text-accent-foreground" />
           <AlertTitle className="font-headline text-xl text-accent-foreground">
@@ -90,7 +119,7 @@ export default function KanjiPage() {
         </Alert>
       ) : (
         <KanjiList
-          kanjiEntries={filteredKanjiList}
+          kanjiEntries={displayedKanjiList}
           onUpdateKanji={updateKanji}
           onDeleteKanji={deleteKanji}
         />
