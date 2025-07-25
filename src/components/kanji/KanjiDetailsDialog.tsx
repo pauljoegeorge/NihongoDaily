@@ -8,17 +8,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Mic, MessageSquareText, ListChecks } from 'lucide-react';
+import { Mic, MessageSquareText, ListChecks, Edit3, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Button } from '../ui/button';
 
 interface KanjiDetailsDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   kanjiEntry: KanjiEntry;
+  onEdit: (kanji: KanjiEntry) => void;
+  onDelete: (id: string) => void;
 }
 
 // Helper to parse example text into an array of lines, filtering empty ones
@@ -27,7 +31,7 @@ const parseExamples = (text: string | undefined): string[] => {
   return text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
 };
 
-export default function KanjiDetailsDialog({ isOpen, setIsOpen, kanjiEntry }: KanjiDetailsDialogProps) {
+export default function KanjiDetailsDialog({ isOpen, setIsOpen, kanjiEntry, onEdit, onDelete }: KanjiDetailsDialogProps) {
   if (!kanjiEntry) return null;
   
   const onyomiExamples = parseExamples(kanjiEntry.onyomiExamplesText);
@@ -110,6 +114,16 @@ export default function KanjiDetailsDialog({ isOpen, setIsOpen, kanjiEntry }: Ka
               </Accordion>
             </div>
         </div>
+         <DialogFooter className="pt-4 border-t border-border">
+          <Button variant="outline" onClick={() => onEdit(kanjiEntry)}>
+            <Edit3 className="mr-2 h-4 w-4" />
+            Edit
+          </Button>
+          <Button variant="destructive" onClick={() => onDelete(kanjiEntry.id)}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
