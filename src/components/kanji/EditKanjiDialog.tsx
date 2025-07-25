@@ -51,6 +51,7 @@ export default function EditKanjiDialog({ isOpen, setIsOpen, kanjiToEdit, onUpda
         onyomiExamplesText: kanjiToEdit.onyomiExamplesText,
         kunyomiExamplesText: kanjiToEdit.kunyomiExamplesText,
         usageExampleSentences: kanjiToEdit.usageExampleSentences.join('\n'),
+        pageNumber: kanjiToEdit.pageNumber,
       });
     }
   }, [kanjiToEdit, isOpen, form]);
@@ -77,22 +78,35 @@ export default function EditKanjiDialog({ isOpen, setIsOpen, kanjiToEdit, onUpda
              <BookText className="h-6 w-6 mr-2"/> Edit Kanji: {kanjiToEdit.kanji}
           </DialogTitle>
           <DialogDescription>
-            Update the details for this Kanji. For readings, use comma-separated values. For examples, use one per line.
+            Update the details for this Kanji. Only the character itself is required.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4 pl-1">
-            <FormField
-              control={form.control}
-              name="kanji"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground">Kanji Character</FormLabel>
-                  <FormControl><Input {...field} className="bg-background"/></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-3 gap-4">
+               <FormField
+                control={form.control}
+                name="kanji"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel className="text-foreground">Kanji Character</FormLabel>
+                    <FormControl><Input {...field} className="bg-background"/></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="pageNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground">Page #</FormLabel>
+                    <FormControl><Input type="number" {...field} className="bg-background"/></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="meaning"

@@ -51,6 +51,7 @@ export interface KanjiEntry {
   onyomiExamplesText: string; // Raw text from textarea for On'yomi example words/phrases
   kunyomiExamplesText: string; // Raw text from textarea for Kun'yomi example words/phrases
   usageExampleSentences: string[]; // For general usage example sentences of the Kanji
+  pageNumber?: number;
   createdAt: number; // Timestamp (milliseconds since epoch)
   userId: string; // To associate with a user
 }
@@ -63,6 +64,7 @@ export interface FirestoreKanjiEntry {
   onyomiExamplesText: string;
   kunyomiExamplesText: string;
   usageExampleSentences: string[];
+  pageNumber?: number;
   createdAt: any; // Firestore ServerTimestamp or Timestamp
   userId: string;
 }

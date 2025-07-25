@@ -46,6 +46,7 @@ export default function AddKanjiDialog({ onAddKanji }: AddKanjiDialogProps) {
       onyomiExamplesText: '',
       kunyomiExamplesText: '',
       usageExampleSentences: '',
+      pageNumber: undefined,
     },
   });
 
@@ -77,23 +78,36 @@ export default function AddKanjiDialog({ onAddKanji }: AddKanjiDialogProps) {
             <BookText className="h-6 w-6 mr-2"/> Add New Kanji
           </DialogTitle>
           <DialogDescription>
-            Enter the details for the new Kanji character. For readings, use comma-separated values. For examples, use one per line.
+            Enter the details for the new Kanji character. Only the character itself is required.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 py-3 max-h-[70vh] overflow-y-auto pr-4 pl-1">
-            <FormField
-              control={form.control}
-              name="kanji"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground">Kanji Character</FormLabel>
-                  <FormControl><Input {...field} className="bg-background" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="kanji"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel className="text-foreground">Kanji Character</FormLabel>
+                    <FormControl><Input {...field} className="bg-background" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pageNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground">Page #</FormLabel>
+                    <FormControl><Input type="number" {...field} className="bg-background" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+             <FormField
               control={form.control}
               name="meaning"
               render={({ field }) => (

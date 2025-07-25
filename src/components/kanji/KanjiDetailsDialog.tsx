@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { KanjiEntry } from '@/types';
@@ -12,7 +13,7 @@ import {
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Mic, MessageSquareText, ListChecks, Edit3, Trash2 } from 'lucide-react';
+import { Mic, MessageSquareText, ListChecks, Edit3, Trash2, Book } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '../ui/button';
 
@@ -41,11 +42,19 @@ export default function KanjiDetailsDialog({ isOpen, setIsOpen, kanjiEntry, onEd
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg bg-card max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <div className="flex justify-between items-baseline">
+          <div className="flex justify-between items-start">
              <DialogTitle className="font-headline text-6xl text-primary">{kanjiEntry.kanji}</DialogTitle>
-             <DialogDescription className="text-sm text-muted-foreground pt-1">
-                Added: {format(new Date(kanjiEntry.createdAt), 'PPP')}
-             </DialogDescription>
+             <div className="text-right">
+                <DialogDescription className="text-sm text-muted-foreground pt-1">
+                    Added: {format(new Date(kanjiEntry.createdAt), 'PPP')}
+                </DialogDescription>
+                {kanjiEntry.pageNumber && (
+                    <div className="text-sm text-muted-foreground pt-1 flex items-center justify-end gap-1.5">
+                        <Book className="h-4 w-4" />
+                        Page {kanjiEntry.pageNumber}
+                    </div>
+                )}
+             </div>
           </div>
           <p className="text-xl text-foreground text-left !mt-2">{kanjiEntry.meaning}</p>
         </DialogHeader>

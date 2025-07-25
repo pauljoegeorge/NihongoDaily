@@ -25,13 +25,14 @@ import {
 import * as z from 'zod';
 
 export const kanjiFormSchema = z.object({
-  kanji: z.string().min(1, 'Kanji character is required.').max(5, 'Kanji input is too long, typically a single character.'), // Max 5 for rare cases or phrases
+  kanji: z.string().min(1, 'Kanji character is required.'),
   meaning: z.string().optional(),
   onyomi: z.string().optional(), // Comma-separated
   kunyomi: z.string().optional(), // Comma-separated
   onyomiExamplesText: z.string().optional(),
   kunyomiExamplesText: z.string().optional(),
   usageExampleSentences: z.string().optional(), // Newline-separated
+  pageNumber: z.coerce.number().optional(),
 });
 
 export type KanjiFormData = z.infer<typeof kanjiFormSchema>;
@@ -76,6 +77,7 @@ export function useKanji() {
           onyomiExamplesText: data.onyomiExamplesText || '',
           kunyomiExamplesText: data.kunyomiExamplesText || '',
           usageExampleSentences: data.usageExampleSentences || [],
+          pageNumber: data.pageNumber,
           createdAt: createdAtMillis,
           userId: data.userId,
         });
@@ -140,6 +142,7 @@ export function useKanji() {
       onyomiExamplesText: formData.onyomiExamplesText || '',
       kunyomiExamplesText: formData.kunyomiExamplesText || '',
       usageExampleSentences: formData.usageExampleSentences ? formData.usageExampleSentences.split('\n').map(s => s.trim()).filter(s => s) : [],
+      pageNumber: formData.pageNumber,
       createdAt: serverTimestamp(),
       userId: user.uid,
     };
@@ -183,6 +186,7 @@ export function useKanji() {
         onyomiExamplesText: formData.onyomiExamplesText || '',
         kunyomiExamplesText: formData.kunyomiExamplesText || '',
         usageExampleSentences: formData.usageExampleSentences ? formData.usageExampleSentences.split('\n').map(s => s.trim()).filter(s => s) : [],
+        pageNumber: formData.pageNumber,
         // Note: createdAt is not updated here as it's a creation timestamp
       };
 
