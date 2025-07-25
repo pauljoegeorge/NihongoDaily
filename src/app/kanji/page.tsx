@@ -6,12 +6,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useKanji } from '@/hooks/useKanji';
 import AddKanjiDialog from '@/components/kanji/AddKanjiDialog';
 import KanjiList from '@/components/kanji/KanjiList';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { LogIn, Loader2, Info, Search, BookText } from 'lucide-react';
+import { LogIn, Info, Search, BookText } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import { Input } from '@/components/ui/input';
 
 export default function KanjiPage() {
   const { user, loading: authLoading } = useAuth();
@@ -23,10 +22,10 @@ export default function KanjiPage() {
       <div className="space-y-8">
         <Skeleton className="h-12 w-full mb-4" /> 
         <Skeleton className="h-8 w-1/4 mb-4" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, cardIndex) => (
-            <Skeleton key={cardIndex} className="h-64 w-full rounded-lg" />
-          ))}
+        <div className="space-y-2">
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg" />
         </div>
       </div>
     );
@@ -75,13 +74,10 @@ export default function KanjiPage() {
       </div>
 
       {kanjiLoading ? (
-         <div className="space-y-8">
-            <Skeleton className="h-8 w-1/4 mb-4" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, cardIndex) => (
-                <Skeleton key={cardIndex} className="h-64 w-full rounded-lg" />
-              ))}
-            </div>
+         <div className="space-y-2">
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
         </div>
       ) : filteredKanjiList.length === 0 ? (
         <Alert className="max-w-md mx-auto bg-accent/10 border-accent/30">
@@ -97,11 +93,13 @@ export default function KanjiPage() {
           </AlertDescription>
         </Alert>
       ) : (
-        <KanjiList
-          kanjiEntries={filteredKanjiList}
-          onUpdateKanji={updateKanji}
-          onDeleteKanji={deleteKanji}
-        />
+        <div className="bg-card shadow rounded-lg p-2 sm:p-4">
+          <KanjiList
+            kanjiEntries={filteredKanjiList}
+            onUpdateKanji={updateKanji}
+            onDeleteKanji={deleteKanji}
+          />
+        </div>
       )}
       <AddKanjiDialog onAddKanji={addKanji} />
     </div>
