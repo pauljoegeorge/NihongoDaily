@@ -42,44 +42,51 @@ export default function KanjiList({ kanjiEntries, onUpdateKanji, onDeleteKanji }
       <TooltipProvider>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {kanjiEntries.map((entry) => (
-            <Card key={entry.id} className="flex flex-col justify-between text-center shadow-md hover:shadow-lg transition-shadow bg-card">
-              <CardHeader className="cursor-pointer p-4" onClick={() => handleViewDetails(entry)}>
-                <CardTitle className="font-headline text-5xl text-primary">{entry.kanji}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0 cursor-pointer" onClick={() => handleViewDetails(entry)}>
-                <p className="text-sm text-muted-foreground truncate" title={entry.meaning}>
-                  {entry.meaning || "No meaning"}
-                </p>
-              </CardContent>
-              <CardFooter className="p-2 border-t bg-muted/20 flex justify-center gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => handleViewDetails(entry)} className="text-foreground/70 hover:text-primary h-8 w-8">
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">View Details</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>View Details</p></TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)} className="text-foreground/70 hover:text-primary h-8 w-8">
-                      <Edit3 className="h-4 w-4" />
-                      <span className="sr-only">Edit Kanji</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Edit Kanji</p></TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => onDeleteKanji(entry.id)} className="text-destructive hover:text-destructive/80 h-8 w-8">
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete Kanji</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Delete Kanji</p></TooltipContent>
-                </Tooltip>
-              </CardFooter>
+            <Card 
+              key={entry.id} 
+              className="group relative flex flex-col justify-center items-center text-center shadow-md hover:shadow-lg transition-all bg-card aspect-square"
+              onClick={() => handleViewDetails(entry)}
+            >
+              <div className="absolute inset-0 bg-card rounded-lg group-hover:bg-card/50 transition-colors cursor-pointer flex flex-col justify-center items-center p-2">
+                <p className="font-headline text-5xl sm:text-6xl text-primary transition-transform group-hover:scale-90">{entry.kanji}</p>
+
+                {/* Hidden content that appears on hover */}
+                <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center">
+                  <p className="text-sm text-muted-foreground truncate" title={entry.meaning}>
+                    {entry.meaning || "No meaning"}
+                  </p>
+                  
+                  <div className="mt-2 flex justify-center gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleViewDetails(entry); }} className="text-foreground/70 hover:text-primary h-8 w-8 bg-background/50 hover:bg-background/80">
+                          <Eye className="h-4 w-4" />
+                          <span className="sr-only">View Details</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>View Details</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleEdit(entry); }} className="text-foreground/70 hover:text-primary h-8 w-8 bg-background/50 hover:bg-background/80">
+                          <Edit3 className="h-4 w-4" />
+                          <span className="sr-only">Edit Kanji</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Edit Kanji</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDeleteKanji(entry.id); }} className="text-destructive hover:text-destructive/80 h-8 w-8 bg-background/50 hover:bg-background/80">
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete Kanji</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Delete Kanji</p></TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
+              </div>
             </Card>
           ))}
         </div>
