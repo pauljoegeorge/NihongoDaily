@@ -51,7 +51,7 @@ export default function EditKanjiDialog({ isOpen, setIsOpen, kanjiToEdit, onUpda
         onyomiExamplesText: kanjiToEdit.onyomiExamplesText,
         kunyomiExamplesText: kanjiToEdit.kunyomiExamplesText,
         usageExampleSentences: kanjiToEdit.usageExampleSentences.join('\n'),
-        pageNumber: kanjiToEdit.pageNumber,
+        pageNumber: kanjiToEdit.pageNumber ?? '',
       });
     }
   }, [kanjiToEdit, isOpen, form]);

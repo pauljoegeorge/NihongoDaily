@@ -46,7 +46,7 @@ export default function AddKanjiDialog({ onAddKanji }: AddKanjiDialogProps) {
       onyomiExamplesText: '',
       kunyomiExamplesText: '',
       usageExampleSentences: '',
-      pageNumber: undefined,
+      pageNumber: '',
     },
   });
 
