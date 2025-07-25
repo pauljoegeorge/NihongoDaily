@@ -36,6 +36,7 @@ export default function KanjiDetailsDialog({ isOpen, setIsOpen, kanjiEntry, onEd
   
   const onyomiExamples = parseExamples(kanjiEntry.onyomiExamplesText);
   const kunyomiExamples = parseExamples(kanjiEntry.kunyomiExamplesText);
+  const usageExamples = kanjiEntry.usageExampleSentences || [];
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -72,7 +73,7 @@ export default function KanjiDetailsDialog({ isOpen, setIsOpen, kanjiEntry, onEd
                 )}
               </div>
               
-              {(onyomiExamples.length > 0 || kunyomiExamples.length > 0 || kanjiEntry.usageExampleSentences.length > 0) && <Separator />}
+              {(onyomiExamples.length > 0 || kunyomiExamples.length > 0 || usageExamples.length > 0) && <Separator />}
 
               <Accordion type="multiple" className="w-full" defaultValue={['item-onyomi-ex', 'item-kunyomi-ex', 'item-usage-ex']}>
                 {onyomiExamples.length > 0 && (
@@ -99,13 +100,13 @@ export default function KanjiDetailsDialog({ isOpen, setIsOpen, kanjiEntry, onEd
                     </AccordionContent>
                   </AccordionItem>
                 )}
-                {kanjiEntry.usageExampleSentences && kanjiEntry.usageExampleSentences.length > 0 && (
+                {usageExamples.length > 0 && (
                   <AccordionItem value="item-usage-ex">
                     <AccordionTrigger className="text-base font-semibold hover:no-underline">
                        <div className="flex items-center gap-2"><MessageSquareText className="h-5 w-5 text-primary" />Usage Examples</div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 space-y-1.5">
-                      {kanjiEntry.usageExampleSentences.map((sentence, index) => (
+                      {usageExamples.map((sentence, index) => (
                         <p key={`usage-ex-${index}`} className="text-sm text-muted-foreground pl-2 border-l-2 border-accent">{sentence}</p>
                       ))}
                     </AccordionContent>
